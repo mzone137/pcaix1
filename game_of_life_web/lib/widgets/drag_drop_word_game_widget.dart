@@ -1,4 +1,5 @@
-// lib/widgets/drag_drop_word_game_widget.dart - Hauptwidget für das Drag & Drop-Spiel
+
+// lib/widgets/drag_drop_word_game_widget.dart - Angepasst für randomisierte Wortanordnung
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -24,33 +25,36 @@ class _DragDropWordGameWidgetState extends State<DragDropWordGameWidget> with Si
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;
   late Animation<double> _slideAnimation;
-  
+
   // Zuordnung von Positionen zu Worten (für die UI-Darstellung)
   Map<int, String> _targetSlots = {};
+
+  // Status der Platzierungen (richtig/falsch)
+  Map<int, bool> _placementStatus = {};
 
   @override
   void initState() {
     super.initState();
-    
+
     _controller = AnimationController(
       duration: const Duration(milliseconds: 700),
       vsync: this,
     );
-    
+
     _scaleAnimation = Tween<double>(begin: 0.8, end: 1.0).animate(
       CurvedAnimation(
         parent: _controller,
         curve: Curves.elasticOut,
       ),
     );
-    
+
     _slideAnimation = Tween<double>(begin: 50.0, end: 0.0).animate(
       CurvedAnimation(
         parent: _controller,
         curve: Curves.easeOutCubic,
       ),
     );
-    
+
     _controller.forward();
   }
 
@@ -65,7 +69,7 @@ class _DragDropWordGameWidgetState extends State<DragDropWordGameWidget> with Si
     return Consumer<WordGameStateModel>(
       builder: (context, gameState, _) {
         final sentence = gameState.currentSentence;
-        
+
         if (sentence == null) {
           return Center(
             child: Text(
@@ -79,7 +83,8 @@ class _DragDropWordGameWidgetState extends State<DragDropWordGameWidget> with Si
         if (!_controller.isAnimating && _controller.isCompleted) {
           // Reset target slots when a new sentence is loaded
           _targetSlots = {};
-          
+          _placementStatus = {};
+
           _controller.reset();
           _controller.forward();
         }
@@ -116,7 +121,7 @@ class _DragDropWordGameWidgetState extends State<DragDropWordGameWidget> with Si
               children: [
                 // Anweisungstext
                 Text(
-                  'Arrange the words in correct order',
+                  'Drag words with numbers to arrange them in correct order',
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 18,
@@ -124,9 +129,9 @@ class _DragDropWordGameWidgetState extends State<DragDropWordGameWidget> with Si
                   ),
                   textAlign: TextAlign.center,
                 ),
-                
+
                 SizedBox(height: 24),
-                
+
                 // Zielbereich für die Wörter (Drop-Targets)
                 Container(
                   height: 80,
@@ -140,9 +145,9 @@ class _DragDropWordGameWidgetState extends State<DragDropWordGameWidget> with Si
                       width: 1,
                     ),
                   ),
-                  child: buildTargetArea(sentence),
+                  child: buildTargetArea(sentence, gameState),
                 ),
-                
+
                 // Reset-Button
                 TextButton.icon(
                   onPressed: () {
@@ -156,10 +161,10 @@ class _DragDropWordGameWidgetState extends State<DragDropWordGameWidget> with Si
                     style: TextStyle(color: Colors.white70),
                   ),
                 ),
-                
+
                 SizedBox(height: 16),
-                
-                // Quellbereich für die Wörter (Draggables)
+
+                // Quellbereich für die Wörter (Draggables) - RANDOMISIERT
                 Expanded(
                   child: buildSourceArea(sentence, gameState),
                 ),
@@ -175,11 +180,12 @@ class _DragDropWordGameWidgetState extends State<DragDropWordGameWidget> with Si
   void _resetTargetSlots() {
     setState(() {
       _targetSlots = {};
+      _placementStatus = {};
     });
   }
 
   // Baut den Zielbereich auf, wo Wörter abgelegt werden
-  Widget buildTargetArea(WordGameSentence sentence) {
+  Widget buildTargetArea(WordGameSentence sentence, WordGameStateModel gameState) {
     return Center(
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
@@ -187,44 +193,50 @@ class _DragDropWordGameWidgetState extends State<DragDropWordGameWidget> with Si
           mainAxisAlignment: MainAxisAlignment.center,
           children: List.generate(
             sentence.words.length,
-            (position) {
+                (position) {
               // Prüfe, ob an dieser Position bereits ein Wort platziert ist
               String? placedWord;
               int? originalIndex;
-              
+              bool isCorrect = true; // Standard: korrekt
+
               // Suche nach dem Wort, das an dieser Position platziert ist
               for (int i = 0; i < sentence.words.length; i++) {
-                if (sentence.isWordPlaced(i) && 
-                    _targetSlots.containsKey(position) && 
+                if (sentence.isWordPlaced(i) &&
+                    _targetSlots.containsKey(position) &&
                     _targetSlots[position] == sentence.words[i]) {
                   placedWord = sentence.words[i];
                   originalIndex = i;
+                  // Überprüfe, ob die Position korrekt ist
+                  isCorrect = _placementStatus[position] ?? true;
                   break;
                 }
               }
-              
+
               return DroppableWordSlotWidget(
                 position: position,
                 word: placedWord,
+                isCorrect: isCorrect,
                 onAccept: (originalWordIndex, targetPosition) {
-                  // Aktualisiere das Spielmodell
-                  final success = Provider.of<WordGameStateModel>(context, listen: false)
-                      .placeWord(originalWordIndex, targetPosition);
-                  
+                  // Aktualisiere das Spielmodell und prüfe, ob die Platzierung korrekt ist
+                  final isCorrect = gameState.placeWord(originalWordIndex, targetPosition);
+
                   // Aktualisiere die UI
-                  if (success) {
-                    setState(() {
-                      _targetSlots[targetPosition] = sentence.words[originalWordIndex];
-                    });
-                    
-                    // Prüfe, ob die Lösung korrekt ist
-                    if (sentence.isSolutionCorrect()) {
-                      // Spiele Erfolgs-Sound ab
-                      AudioService().playSuccessSound();
-                      
-                      // Rufe den Callback auf
-                      widget.onSolutionCorrect();
-                    }
+                  setState(() {
+                    _targetSlots[targetPosition] = sentence.words[originalWordIndex];
+                    _placementStatus[targetPosition] = isCorrect;
+                  });
+
+                  // Spiele Sound entsprechend dem Ergebnis
+                  if (isCorrect) {
+                    AudioService().playSuccessSound();
+                  } else {
+                    AudioService().playErrorSound();
+                  }
+
+                  // Prüfe, ob die Lösung korrekt ist
+                  if (sentence.isSolutionCorrect()) {
+                    // Rufe den Callback auf
+                    widget.onSolutionCorrect();
                   }
                 },
               );
@@ -235,7 +247,7 @@ class _DragDropWordGameWidgetState extends State<DragDropWordGameWidget> with Si
     );
   }
 
-  // Baut den Quellbereich auf, aus dem Wörter gezogen werden
+  // Baut den Quellbereich auf, aus dem Wörter gezogen werden - RANDOMISIERT
   Widget buildSourceArea(WordGameSentence sentence, WordGameStateModel gameState) {
     return Container(
       padding: EdgeInsets.all(16),
@@ -248,23 +260,35 @@ class _DragDropWordGameWidgetState extends State<DragDropWordGameWidget> with Si
           spacing: 8,
           runSpacing: 12,
           alignment: WrapAlignment.center,
-          children: sentence.randomizedWords.map((entry) {
-            final int index = entry.key - 1; // Original-Index (0-basiert)
-            final String word = entry.value;
-            final bool isPlaced = sentence.isWordPlaced(index);
-            
+          children: sentence.randomizedWordsWithIndices.entries.map((entry) {
+            // Verwende die randomisierte Anordnung
+            final int originalIndex = entry.value.key;
+            final String word = entry.value.value;
+            final int displayNumber = sentence.getDisplayNumberForWord(originalIndex);
+
+            final bool isPlaced = sentence.isWordPlaced(originalIndex);
+
             return DraggableWordWidget(
               word: word,
-              originalIndex: index,
+              originalIndex: originalIndex,
+              randomizedIndex: displayNumber,
               isPlaced: isPlaced,
               onRemove: isPlaced ? () {
                 // Entferne das Wort aus dem Zielbereich
-                gameState.removeWord(index);
-                
+                gameState.removeWord(originalIndex);
+
                 // Aktualisiere die UI
                 setState(() {
-                  // Finde und entferne den Eintrag aus _targetSlots
-                  _targetSlots.removeWhere((key, value) => value == word);
+                  // Finde und entferne den Eintrag aus _targetSlots und _placementStatus
+                  int? positionToRemove;
+                  _targetSlots.forEach((pos, w) {
+                    if (w == word) positionToRemove = pos;
+                  });
+
+                  if (positionToRemove != null) {
+                    _targetSlots.remove(positionToRemove);
+                    _placementStatus.remove(positionToRemove);
+                  }
                 });
               } : null,
             );

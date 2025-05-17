@@ -1,4 +1,5 @@
-// lib/screens/word_game_screen.dart - Angepasst für Drag & Drop
+
+// lib/screens/word_game_screen.dart - Angepasst für Spielmodus-Toggle
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -8,6 +9,8 @@ import '../widgets/word_game_timer_widget.dart';
 import '../widgets/word_game_results_widget.dart';
 import '../widgets/chapter_selection_widget.dart';
 import '../widgets/drag_drop_word_game_widget.dart';
+import '../widgets/number_input_widget.dart';
+import '../widgets/game_mode_toggle_widget.dart';
 import '../services/audio_service.dart';
 
 class WordGameScreen extends StatefulWidget {
@@ -26,7 +29,7 @@ class _WordGameScreenState extends State<WordGameScreen> {
     super.initState();
     _preloadSounds();
   }
-  
+
   // Lade alle Sound-Effekte vor
   Future<void> _preloadSounds() async {
     await _audioService.preloadSounds();
@@ -40,12 +43,12 @@ class _WordGameScreenState extends State<WordGameScreen> {
         if (gameState.currentChapter == null) {
           return _buildChapterSelection(context, gameState);
         }
-        
+
         // Wenn das Spiel beendet ist, zeige Ergebnisse
         if (!gameState.isGameActive) {
           return _buildResultsScreen(context, gameState);
         }
-        
+
         // Ansonsten zeige das Spielfeld
         return _buildGameScreen(context, gameState);
       },
@@ -64,7 +67,7 @@ class _WordGameScreenState extends State<WordGameScreen> {
         ),
       );
     }
-    
+
     return Scaffold(
       appBar: AppBar(
         title: Text(gameState.currentLevel!.title),
@@ -89,11 +92,23 @@ class _WordGameScreenState extends State<WordGameScreen> {
             ],
           ),
         ),
-        child: ChapterSelectionWidget(
-          level: gameState.currentLevel!,
-          onChapterSelected: (chapter) {
-            gameState.selectChapter(chapter);
-          },
+        child: Column(
+          children: [
+            // Game mode toggle (oberhalb der Kapitelauswahl)
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: GameModeToggleWidget(),
+            ),
+
+            Expanded(
+              child: ChapterSelectionWidget(
+                level: gameState.currentLevel!,
+                onChapterSelected: (chapter) {
+                  gameState.selectChapter(chapter);
+                },
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -132,14 +147,14 @@ class _WordGameScreenState extends State<WordGameScreen> {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
                 child: LinearProgressIndicator(
-                  value: gameState.currentSentenceIndex / 
+                  value: gameState.currentSentenceIndex /
                       gameState.currentChapter!.sentences.length,
                   backgroundColor: Colors.grey[800],
                   valueColor: AlwaysStoppedAnimation<Color>(AppTheme.neonBlue),
                 ),
               ),
-              
-              // Sentence counter
+
+              // Sentence counter and timer
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0),
                 child: Row(
@@ -153,28 +168,24 @@ class _WordGameScreenState extends State<WordGameScreen> {
                   ],
                 ),
               ),
-              
-              SizedBox(height: 16),
-              
-              // Game instructions
+
+              SizedBox(height: 8),
+
+              // Game Mode Toggle
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                child: Text(
-                  'Drag the words into the correct order',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 18,
-                    fontWeight: FontWeight.w500,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: GameModeToggleWidget(),
               ),
-              
-              // Drag & Drop Word Game (Hauptspiel-Widget)
+
+              // Hauptspielbereich - basierend auf ausgewähltem Modus
               Expanded(
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),
-                  child: DragDropWordGameWidget(
+                  child: gameState.useDragAndDrop
+                      ? DragDropWordGameWidget(
+                    onSolutionCorrect: () => _handleCorrectSolution(context, gameState),
+                  )
+                      : NumberInputWidget(
                     onSolutionCorrect: () => _handleCorrectSolution(context, gameState),
                   ),
                 ),
@@ -239,7 +250,7 @@ class _WordGameScreenState extends State<WordGameScreen> {
       },
       transitionDuration: Duration(milliseconds: 500),
     );
-    
+
     // Nach 2 Sekunden zum nächsten Satz
     Future.delayed(Duration(milliseconds: 2000), () {
       Navigator.of(context).pop();

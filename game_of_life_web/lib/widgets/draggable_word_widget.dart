@@ -1,4 +1,4 @@
-// lib/widgets/draggable_word_widget.dart - Neues Widget für Drag & Drop-Funktionalität
+// lib/widgets/draggable_word_widget.dart - Aktualisiert für Anzeige der Zahlen
 
 import 'package:flutter/material.dart';
 import '../utils/app_theme.dart';
@@ -7,6 +7,7 @@ import '../services/audio_service.dart';
 class DraggableWordWidget extends StatelessWidget {
   final String word;
   final int originalIndex;
+  final int randomizedIndex; // Neuer Parameter für die randomisierte Zahl
   final bool isPlaced;
   final VoidCallback? onRemove;
 
@@ -14,6 +15,7 @@ class DraggableWordWidget extends StatelessWidget {
     Key? key,
     required this.word,
     required this.originalIndex,
+    required this.randomizedIndex, // Neue Anforderung
     this.isPlaced = false,
     this.onRemove,
   }) : super(key: key);
@@ -30,31 +32,31 @@ class DraggableWordWidget extends StatelessWidget {
     return Draggable<int>(
       // Der Wert, der beim Drag übergeben wird, ist der Original-Index des Wortes
       data: originalIndex,
-      
+
       // Feedback wird angezeigt, während das Wort gezogen wird
       feedback: Material(
         color: Colors.transparent,
         child: _buildWordContainer(
-          context: context, 
+          context: context,
           color: AppTheme.neonBlue.withOpacity(0.9),
           scale: 1.1,
           shadowIntensity: 0.4,
         ),
       ),
-      
+
       // Widget im Ruhezustand
       child: _buildWordContainer(
         context: context,
         color: AppTheme.deepBlue,
       ),
-      
+
       // Widget an der Originalposition während des Ziehens
       childWhenDragging: _buildWordContainer(
         context: context,
         color: Colors.grey.withOpacity(0.3),
         textOpacity: 0.5,
       ),
-      
+
       // Callbacks
       onDragStarted: () {
         // Sound beim Aufheben des Wortes abspielen
@@ -103,13 +105,42 @@ class DraggableWordWidget extends StatelessWidget {
             ),
           ],
         ),
-        child: Text(
-          word,
-          style: TextStyle(
-            color: Colors.white.withOpacity(textOpacity),
-            fontSize: 22,
-            fontWeight: FontWeight.w500,
-          ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              word,
+              style: TextStyle(
+                color: Colors.white.withOpacity(textOpacity),
+                fontSize: 20,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            SizedBox(width: 8),
+            // Zeige die Nummer in einem Kreis an
+            Container(
+              width: 28,
+              height: 28,
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.2),
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: Colors.white.withOpacity(0.3),
+                  width: 1,
+                ),
+              ),
+              child: Center(
+                child: Text(
+                  randomizedIndex.toString(),
+                  style: TextStyle(
+                    color: Colors.white.withOpacity(textOpacity),
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );

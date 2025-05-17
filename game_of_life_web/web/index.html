@@ -30,12 +30,26 @@
 <body>
 <script>
     window.addEventListener('load', function(ev) {
-      // Download main.dart.js
-      _flutter.loader.load({
-        serviceWorker: {
-          serviceWorkerVersion: '{{flutter_service_worker_version}}',
-        }
-      });
+      // Detect the flutter initialization js code
+      _flutter = _flutter || {};
+      _flutter.loader = _flutter.loader || {};
+
+      var serviceWorkerVersion = serviceWorkerVersion || null;
+
+      try {
+        _flutter.loader.loadEntrypoint({
+          serviceWorker: {
+            serviceWorkerVersion: serviceWorkerVersion,
+          },
+          onEntrypointLoaded: function(engineInitializer) {
+            engineInitializer.initializeEngine().then(function(appRunner) {
+              appRunner.runApp();
+            });
+          }
+        });
+      } catch (e) {
+        console.error("Flutter initialization error:", e);
+      }
     });
 </script>
 </body>
