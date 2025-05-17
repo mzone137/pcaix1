@@ -1,36 +1,29 @@
-// lib/main.dart - Angepasst für AudioService-Initialisierung
-
+// lib/main.dart - Korrigierte Version ohne Word Game Imports
 import 'package:flutter/material.dart';
-import 'package:game_of_life_app/services/chiptune_service.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'models/game_state.dart';
-import 'models/word_game_models.dart';
 import 'screens/landing_page.dart';
-import 'services/audio_service.dart';
+import 'utils/app_theme.dart';
 
 void main() async {
-  // Stellen Sie sicher, dass Flutter-Widgets initialisiert sind
   WidgetsFlutterBinding.ensureInitialized();
 
-  // Vorladen der Audio-Assets kann hier geschehen, wird aber zur Sicherheit auch
-  // beim ersten Aufruf des Word-Games durchgeführt
-  try {
-    await AudioService().preloadSounds();
-  } catch (e) {
-    print('Warning: Could not preload audio assets: $e');
-  }
+  // Set preferred orientations (optional)
+  SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.portraitDown,
+  ]);
 
-  runApp(
-    MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (context) => GameStateModel()),
-        ChangeNotifierProvider(create: (context) => WordGameStateModel()),
-        ChangeNotifierProvider(create: (_) => ChiptuneService()),
-        Provider<AudioService>(create: (_) => AudioService()),
-      ],
-      child: const MyApp(),
+  // Set system UI overlay style (status bar)
+  SystemChrome.setSystemUIOverlayStyle(
+    const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: Brightness.light,
     ),
   );
+
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
@@ -38,15 +31,38 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Neural Nexus - Game of Life',
-      theme: ThemeData(
-        brightness: Brightness.dark,
-        primarySwatch: Colors.blue,
-        visualDensity: VisualDensity.adaptivePlatformDensity,
+    return ChangeNotifierProvider(
+      create: (context) => GameStateModel(),
+      child: MaterialApp(
+        title: 'Neural Nexus',
+        debugShowCheckedModeBanner: false,
+        theme: ThemeData(
+          primarySwatch: Colors.blue,
+          brightness: Brightness.dark,
+          scaffoldBackgroundColor: Colors.black,
+          fontFamily: 'Roboto',
+          appBarTheme: AppBarTheme(
+            backgroundColor: AppTheme.deepBlue,
+            elevation: 0,
+            centerTitle: true,
+            titleTextStyle: const TextStyle(
+              fontFamily: 'Roboto',
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 2.0,
+            ),
+          ),
+          visualDensity: VisualDensity.adaptivePlatformDensity,
+          pageTransitionsTheme: const PageTransitionsTheme(
+            builders: {
+              TargetPlatform.android: ZoomPageTransitionsBuilder(),
+              TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
+              TargetPlatform.macOS: CupertinoPageTransitionsBuilder(),
+            },
+          ),
+        ),
+        home: const LandingPage(),
       ),
-      home: const LandingPage(),
-      debugShowCheckedModeBanner: false,
     );
   }
 }
