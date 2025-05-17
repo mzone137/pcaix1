@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import '../models/word_game_models.dart';
 import '../widgets/animated_background.dart';
 import '../widgets/glitch_text.dart';
 import '../utils/app_theme.dart';
 import '../widgets/app_footer.dart';
 import 'home_screen.dart';
+import 'word_game_levels_screen.dart'; // Neue Import-Anweisung
 
 class LandingPage extends StatefulWidget {
   const LandingPage({Key? key}) : super(key: key);
@@ -112,6 +115,14 @@ class _LandingPageState extends State<LandingPage> with SingleTickerProviderStat
                             onTap: () => _navigateToGameOfLife(context),
                           ),
 
+                          // Neu: Word Game Menüpunkt
+                          _buildMenuItem(
+                            icon: Icons.text_fields,
+                            title: 'WORLDS WIDE WORDS OLYMPIC GAMES',
+                            subtitle: 'Interactive word sequencing challenge',
+                            onTap: () => _navigateToWordGame(context),
+                          ),
+
                           _buildMenuItem(
                             icon: Icons.auto_graph,
                             title: 'NEURAL PATTERNS',
@@ -147,6 +158,51 @@ class _LandingPageState extends State<LandingPage> with SingleTickerProviderStat
         ],
       ),
     );
+  }
+
+
+  void _navigateToWordGame(BuildContext context) {
+    // Animation für den Übergang
+    showGeneralDialog(
+      context: context,
+      barrierDismissible: false,
+      pageBuilder: (_, __, ___) => Container(),
+      transitionBuilder: (context, animation, secondaryAnimation, child) {
+        return FadeTransition(
+          opacity: Tween<double>(begin: 0.0, end: 1.0).animate(animation),
+          child: Container(color: Colors.black),
+        );
+      },
+      transitionDuration: Duration(milliseconds: 600),
+    );
+
+    Future.delayed(Duration(milliseconds: 2000), () {
+      Navigator.of(context).pop(); // Schließe den schwarzen Übergang
+
+      Navigator.push(
+        context,
+        PageRouteBuilder(
+          pageBuilder: (context, animation, secondaryAnimation) =>
+              MultiProvider(
+                providers: [
+                  ChangeNotifierProvider.value(value: Provider.of<WordGameStateModel>(context, listen: false)),
+                ],
+                child: const WordGameLevelsScreen(),
+              ),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            var begin = const Offset(0.0, 1.0);
+            var end = Offset.zero;
+            var curve = Curves.easeOutQuint;
+            var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+            return SlideTransition(
+              position: animation.drive(tween),
+              child: child,
+            );
+          },
+          transitionDuration: Duration(milliseconds: 800),
+        ),
+      );
+    });
   }
 
   Widget _buildMenuItem({

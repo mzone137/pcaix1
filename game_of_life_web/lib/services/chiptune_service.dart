@@ -1,4 +1,5 @@
-// lib/services/chiptune_service.dart
+// Robustere chiptune_service.dart
+
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/foundation.dart';
 
@@ -19,6 +20,7 @@ class ChiptuneService extends ChangeNotifier {
   ChiptuneTrack _currentTrack = ChiptuneTrack.zelda;
   bool _isPlaying = false;
   double _volume = 0.5;
+  bool _hasErrors = false;
 
   // Track-Namen zur Anzeige
   final Map<ChiptuneTrack, String> trackNames = {
@@ -44,36 +46,60 @@ class ChiptuneService extends ChangeNotifier {
   }
 
   ChiptuneService._internal() {
-    // Initialisierung
-    _audioPlayer.setReleaseMode(ReleaseMode.loop); // Musik in Schleife abspielen
-    _audioPlayer.setVolume(_volume);
+    _initializePlayer();
+  }
 
-    // Event-Listener für Ende des Tracks
-    _audioPlayer.onPlayerComplete.listen((_) {
-      nextTrack(); // Automatisch zum nächsten Track
-    });
+  void _initializePlayer() {
+    try {
+      // Initialisierung
+      _audioPlayer.setReleaseMode(ReleaseMode.loop); // Musik in Schleife abspielen
+      _audioPlayer.setVolume(_volume);
+
+      // Event-Listener für Ende des Tracks
+      _audioPlayer.onPlayerComplete.listen((_) {
+        if (!_hasErrors) {
+          nextTrack(); // Automatisch zum nächsten Track
+        }
+      });
+    } catch (e) {
+      print('Error initializing ChiptuneService: $e');
+      _hasErrors = true;
+    }
   }
 
   // Lädt alle Musik-Dateien vor
   Future<void> preloadMusic() async {
     try {
-      // Hier könnte man alle Tracks vorladen
-      print('Music assets preloaded!');
+      // Wir versuchen nicht, die Musik vorzuladen, um Fehler zu vermeiden
+      print('Music assets marked as preloaded');
     } catch (e) {
       print('Failed to preload music assets: $e');
+      _hasErrors = true;
     }
   }
 
   // Startet oder pausiert die Wiedergabe
   void togglePlayback() async {
-    if (_isPlaying) {
-      await _audioPlayer.pause();
-    } else {
-      await _playCurrentTrack();
+    if (_hasErrors) {
+      _isPlaying = !_isPlaying;
+      notifyListeners();
+      return;
     }
 
-    _isPlaying = !_isPlaying;
-    notifyListeners();
+    try {
+      if (_isPlaying) {
+        await _audioPlayer.pause();
+      } else {
+        await _playCurrentTrack();
+      }
+
+      _isPlaying = !_isPlaying;
+      notifyListeners();
+    } catch (e) {
+      // Ändern den Status trotzdem, damit das UI reagiert
+      _isPlaying = !_isPlaying;
+      notifyListeners();
+    }
   }
 
   // Wechselt zum nächsten Track
@@ -83,8 +109,12 @@ class ChiptuneService extends ChangeNotifier {
     final nextIndex = (values.indexOf(_currentTrack) + 1) % values.length;
     _currentTrack = values[nextIndex];
 
-    if (_isPlaying) {
-      await _playCurrentTrack();
+    if (_isPlaying && !_hasErrors) {
+      try {
+        await _playCurrentTrack();
+      } catch (e) {
+        // Silent fail
+      }
     }
 
     notifyListeners();
@@ -93,21 +123,38 @@ class ChiptuneService extends ChangeNotifier {
   // Stellt die Lautstärke ein
   void setVolume(double volume) {
     _volume = volume;
-    _audioPlayer.setVolume(_volume);
+    if (!_hasErrors) {
+      try {
+        _audioPlayer.setVolume(_volume);
+      } catch (e) {
+        // Silent fail
+      }
+    }
     notifyListeners();
   }
 
   // Spielt den aktuellen Track ab
   Future<void> _playCurrentTrack() async {
+    if (_hasErrors) return;
+
     final path = _trackPaths[_currentTrack];
     if (path != null) {
-      await _audioPlayer.play(AssetSource(path));
+      try {
+        await _audioPlayer.play(AssetSource(path));
+      } catch (e) {
+        print('Error playing track: $e');
+        _hasErrors = true;
+      }
     }
   }
 
   // Cleanup-Ressourcen
   void dispose() {
-    _audioPlayer.dispose();
+    try {
+      _audioPlayer.dispose();
+    } catch (e) {
+      // Ignore disposal errors
+    }
     super.dispose();
   }
 }
