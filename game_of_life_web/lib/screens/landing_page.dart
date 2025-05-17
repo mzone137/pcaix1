@@ -1,8 +1,8 @@
-// lib/screens/landing_page.dart
 import 'package:flutter/material.dart';
 import '../widgets/animated_background.dart';
 import '../widgets/glitch_text.dart';
 import '../utils/app_theme.dart';
+import '../widgets/app_footer.dart';
 import 'home_screen.dart';
 
 class LandingPage extends StatefulWidget {
@@ -43,110 +43,107 @@ class _LandingPageState extends State<LandingPage> with SingleTickerProviderStat
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Stack(
+      body: Column(
         children: [
-          // Animated Matrix-style Background
-          const AnimatedBackground(),
+          Expanded(
+            child: Stack(
+              children: [
+                // Animated Matrix-style Background
+                const AnimatedBackground(),
 
-          // Overlay with Semi-transparent Gradient
-          Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  Colors.black.withOpacity(0.7),
-                  AppTheme.deepBlue.withOpacity(0.8),
-                  Colors.black.withOpacity(0.7),
-                ],
-              ),
-            ),
-          ),
-
-          // Content
-          SafeArea(
-            child: AnimatedBuilder(
-              animation: _fadeAnimation,
-              builder: (context, child) {
-                return Opacity(
-                  opacity: _fadeAnimation.value,
-                  child: child,
-                );
-              },
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SizedBox(height: 60),
-
-                    // Title with Glitch Effect
-                    Center(
-                      child: GlitchText(
-                        'NEURAL NEXUS',
-                        style: AppTheme.titleStyle,
-                      ),
+                // Overlay with Semi-transparent Gradient
+                Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Colors.black.withOpacity(0.7),
+                        AppTheme.deepBlue.withOpacity(0.8),
+                        Colors.black.withOpacity(0.7),
+                      ],
                     ),
-
-                    const SizedBox(height: 20),
-
-                    // Subtitle
-                    Center(
-                      child: Text(
-                        'EMERGENT INTELLIGENCE SYSTEMS',
-                        style: AppTheme.subtitleStyle,
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-
-                    const SizedBox(height: 80),
-
-                    // Menu Items
-                    _buildMenuItem(
-                      icon: Icons.grid_4x4,
-                      title: 'GAME OF LIFE',
-                      subtitle: 'Interactive cellular automaton',
-                      onTap: () => _navigateToGameOfLife(context),
-                    ),
-
-                    _buildMenuItem(
-                      icon: Icons.auto_graph,
-                      title: 'NEURAL PATTERNS',
-                      subtitle: 'Explore network topologies',
-                      onTap: () => _showComingSoon(context),
-                    ),
-
-                    _buildMenuItem(
-                      icon: Icons.biotech,
-                      title: 'SYNTHETIC INTELLIGENCE',
-                      subtitle: 'Simulated cognition experiments',
-                      onTap: () => _showComingSoon(context),
-                    ),
-
-                    _buildMenuItem(
-                      icon: Icons.data_array,
-                      title: 'DATA MATRIX',
-                      subtitle: 'Visualization framework',
-                      onTap: () => _showComingSoon(context),
-                    ),
-
-                    const Spacer(),
-
-                    // Footer
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 24.0),
-                      child: Center(
-                        child: Text(
-                          '© ${DateTime.now().year} NEURAL NEXUS SYSTEMS',
-                          style: AppTheme.captionStyle,
-                        ),
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
-              ),
+
+                // Content
+                SafeArea(
+                  child: AnimatedBuilder(
+                    animation: _fadeAnimation,
+                    builder: (context, child) {
+                      return Opacity(
+                        opacity: _fadeAnimation.value,
+                        child: child,
+                      );
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const SizedBox(height: 60),
+
+                          // Title with Glitch Effect
+                          Center(
+                            child: GlitchText(
+                              'NEURAL NEXUS',
+                              style: AppTheme.titleStyle,
+                            ),
+                          ),
+
+                          const SizedBox(height: 20),
+
+                          // Subtitle
+                          Center(
+                            child: Text(
+                              'EMERGENT INTELLIGENCE SYSTEMS',
+                              style: AppTheme.subtitleStyle,
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+
+                          const SizedBox(height: 80),
+
+                          // Menu Items
+                          _buildMenuItem(
+                            icon: Icons.grid_4x4,
+                            title: 'GAME OF LIFE',
+                            subtitle: 'Interactive cellular automaton',
+                            onTap: () => _navigateToGameOfLife(context),
+                          ),
+
+                          _buildMenuItem(
+                            icon: Icons.auto_graph,
+                            title: 'NEURAL PATTERNS',
+                            subtitle: 'Explore network topologies',
+                            onTap: () => _showComingSoon(context),
+                          ),
+
+                          _buildMenuItem(
+                            icon: Icons.biotech,
+                            title: 'SYNTHETIC INTELLIGENCE',
+                            subtitle: 'Simulated cognition experiments',
+                            onTap: () => _showComingSoon(context),
+                          ),
+
+                          _buildMenuItem(
+                            icon: Icons.data_array,
+                            title: 'DATA MATRIX',
+                            subtitle: 'Visualization framework',
+                            onTap: () => _showComingSoon(context),
+                          ),
+
+                          const Spacer(),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
+          // Footer now separated from the Stack
+          const AppFooter(),
         ],
       ),
     );

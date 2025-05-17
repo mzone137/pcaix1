@@ -13,6 +13,14 @@ dependencies:
   cupertino_icons: ^1.0.6
   provider: ^6.1.1
 
+  # Für Audio-Effekte
+  audioplayers: ^5.2.1
+
+  # Für Speicherung von Spielfortschritt und Statistiken
+  shared_preferences: ^2.2.2
+  # Firebase-Abhängigkeiten wiederherstellen
+  firebase_core: ^2.32.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -21,16 +29,16 @@ dev_dependencies:
 flutter:
   uses-material-design: true
 
-  # Auskommentierte Assets - für ersten Test
-  # assets:
-  #   - assets/images/
-  #   - assets/fonts/
+  assets:
+    - assets/images/
+    - assets/sounds/
+    - assets/music/
 
-  # fonts:
-  #   - family: Orbitron
-  #     fonts:
-  #       - asset: assets/fonts/Orbitron-Regular.ttf
-  #       - asset: assets/fonts/Orbitron-Medium.ttf
-  #         weight: 500
-  #       - asset: assets/fonts/Orbitron-Bold.ttf
-  #         weight: 700
+  fonts:
+    - family: Orbitron
+      fonts:
+        - asset: assets/fonts/Orbitron-Regular.ttf
+        - asset: assets/fonts/Orbitron-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/Orbitron-Bold.ttf
+          weight: 700
