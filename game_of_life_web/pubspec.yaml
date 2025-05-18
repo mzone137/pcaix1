@@ -1,39 +1,41 @@
-  name: game_of_life_app
-  description: Eine interaktive Conway's Game of Life Simulation mit zusätzlichen Spielmodi.
+name: game_of_life_app
+description: Eine interaktive Conway's Game of Life Simulation.
 
-  publish_to: 'none'
+publish_to: 'none'
 
-  version: 1.0.0+1
+version: 1.0.0+1
 
-  environment:
-    sdk: ">=2.17.0 <3.0.0"
+environment:
+  sdk: ">=2.17.0 <3.0.0"
 
-  dependencies:
-    flutter:
-      sdk: flutter
-    cupertino_icons: ^1.0.2
-    provider: ^6.0.3
-    audioplayers: ^4.0.0
-    shared_preferences: ^2.0.15
-    firebase_core: ^2.32.0
-
-  dev_dependencies:
-    flutter_test:
-      sdk: flutter
-    flutter_lints: ^2.0.0
-
+dependencies:
   flutter:
-    uses-material-design: true
+    sdk: flutter
+  cupertino_icons: ^1.0.2
+  provider: ^6.0.3
+  firebase_core: ^2.32.0
+  # Die folgenden Abhängigkeiten werden für das Word Game benötigt, sind aber vorerst auskommentiert
+  audioplayers: ^4.0.0
+  shared_preferences: ^2.0.15
 
-    assets:
-      - assets/images/
-      - assets/sounds/
-      - assets/music/
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^2.0.0
 
-    fonts:
-      - family: Orbitron
-        fonts:
-          - asset: assets/fonts/Orbitron-Regular.ttf
-          - asset: assets/fonts/Orbitron-Bold.ttf
-            weight: 700
-  # Firebase-Abhängigkeiten wiederherstellen
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/images/
+    - assets/sounds/
+    - assets/music/
+
+  fonts:
+    - family: Orbitron
+      fonts:
+        - asset: assets/fonts/Orbitron-Regular.ttf
+        - asset: assets/fonts/Orbitron-Bold.ttf
+          weight: 700
+
+
