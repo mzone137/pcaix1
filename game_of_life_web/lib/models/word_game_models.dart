@@ -1,4 +1,4 @@
-// lib/models/word_game_models.dart - Korrigierte Version mit richtiger Klassenstruktur
+// lib/models/word_game_models.dart - Bugfix für die Zählung und erweiterte Reset-Funktionen
 
 import 'dart:math';
 import 'package:flutter/foundation.dart';
@@ -38,6 +38,17 @@ class WordGameChapter {
         0, (sum, duration) => sum + duration.inMilliseconds);
 
     return Duration(milliseconds: totalMilliseconds ~/ sentenceTimes.length);
+  }
+
+  /// Setzt das Kapitel komplett zurück
+  void reset() {
+    completionTime = null;
+    sentenceTimes.clear();
+
+    // Alle Sätze im Kapitel zurücksetzen
+    for (var sentence in sentences) {
+      sentence.resetSolution();
+    }
   }
 }
 
@@ -145,6 +156,7 @@ class WordGameSentence {
     for (int i = 0; i < words.length; i++) {
       _currentPositions[i] = -1; // -1 bedeutet "nicht platziert"
     }
+    _occupiedTargetPositions.clear();
   }
 
   /// Platziert ein Wort an einer bestimmten Position im Lösungsbereich
@@ -261,6 +273,9 @@ class WordGameSentence {
     for (int i = 0; i < userGuesses.length; i++) {
       userGuesses[i] = null;
     }
+
+    // Randomisiere die Wörter neu - optional, je nach gewünschtem Verhalten
+    _randomizeWords();
   }
 }
 
@@ -302,11 +317,16 @@ class WordGameStateModel extends ChangeNotifier {
   }
 
   /// Initialisiert das Spiel mit dem Level.
-// In lib/models/word_game_models.dart - zur initGame Methode hinzufügen:
   void initGame(WordGameLevel level) {
     _currentLevel = level;
+
+    // Sicherstellen, dass jedes Kapitel zurückgesetzt ist
+    for (var chapter in level.chapters) {
+      chapter.reset();
+    }
+
     _currentChapter = level.chapters.isNotEmpty ? level.chapters.first : null;
-    _currentSentenceIndex = 0;
+    _currentSentenceIndex = 0; // Start bei 0 für korrekte Zählung
     _isGameActive = true;
     _stopwatch.reset();
     _stopwatch.start();
@@ -435,7 +455,8 @@ class WordGameStateModel extends ChangeNotifier {
   /// Wechselt zu einem bestimmten Kapitel.
   void selectChapter(WordGameChapter chapter) {
     _currentChapter = chapter;
-    _currentSentenceIndex = 0;
+    _currentSentenceIndex = 0; // Starte immer bei 0
+    chapter.reset(); // Kapitel zurücksetzen
     _stopwatch.reset();
     _stopwatch.start();
     _isGameActive = true;

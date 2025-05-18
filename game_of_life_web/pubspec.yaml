@@ -6,7 +6,7 @@ publish_to: 'none'
 version: 1.0.0+1
 
 environment:
-  sdk: ">=2.17.0 <3.0.0"
+  sdk: ">=3.0.0 <= 3.8.0-278.2.beta"
 
 dependencies:
   flutter:
@@ -28,6 +28,7 @@ flutter:
 
   assets:
     - assets/images/
+    # Für das Word Game
     - assets/sounds/
     - assets/music/
 

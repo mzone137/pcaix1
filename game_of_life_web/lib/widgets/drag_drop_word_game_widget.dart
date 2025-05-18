@@ -1,4 +1,4 @@
-// lib/widgets/drag_drop_word_game_widget.dart - Angepasst an das Number Input Design
+// lib/widgets/drag_drop_word_game_widget.dart - Bugfixes für Zurücksetzungsprobleme
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -26,10 +26,12 @@ class _DragDropWordGameWidgetState extends State<DragDropWordGameWidget> with Si
   late Animation<double> _slideAnimation;
 
   // Zuordnung von Positionen zu Worten (für die UI-Darstellung)
-  Map<int, String> _targetSlots = {};
+  // Key: Position im UI, Value: Tuple aus (Originalindex, Wort, Korrektheit)
+  Map<int, (int, String, bool)> _placedWords = {};
 
-  // Status der Platzierungen (richtig/falsch)
-  Map<int, bool> _placementStatus = {};
+  // Referenz zum aktuellen Satz, um Änderungen zu erkennen
+  String? _currentSentenceId;
+  int _lastSentenceIndex = -1;
 
   @override
   void initState() {
@@ -68,6 +70,7 @@ class _DragDropWordGameWidgetState extends State<DragDropWordGameWidget> with Si
     return Consumer<WordGameStateModel>(
       builder: (context, gameState, _) {
         final sentence = gameState.currentSentence;
+        final currentSentenceIndex = gameState.currentSentenceIndex;
 
         if (sentence == null) {
           return Center(
@@ -78,14 +81,28 @@ class _DragDropWordGameWidgetState extends State<DragDropWordGameWidget> with Si
           );
         }
 
-        // Animate when the new sentence is shown
-        if (!_controller.isAnimating && _controller.isCompleted) {
-          // Reset target slots when a new sentence is loaded
-          _targetSlots = {};
-          _placementStatus = {};
+        // Generiere eine eindeutige ID für den aktuellen Satz
+        final sentenceId = "${sentence.originalText}-$currentSentenceIndex";
 
-          _controller.reset();
-          _controller.forward();
+        // Überprüfe, ob sich der Satz geändert hat oder der Index geändert hat
+        if (_currentSentenceId != sentenceId || _lastSentenceIndex != currentSentenceIndex) {
+          // Neuer Satz oder Index geladen, setze den Zustand zurück
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted) {
+              setState(() {
+                _placedWords = {};
+                _currentSentenceId = sentenceId;
+                _lastSentenceIndex = currentSentenceIndex;
+
+                // Stelle auch sicher, dass die Wörter im Spielmodell zurückgesetzt sind
+                sentence.resetSolution();
+              });
+
+              // Starte die Animation neu
+              _controller.reset();
+              _controller.forward();
+            }
+          });
         }
 
         return AnimatedBuilder(
@@ -101,7 +118,6 @@ class _DragDropWordGameWidgetState extends State<DragDropWordGameWidget> with Si
           },
           child: Container(
             padding: EdgeInsets.all(16),
-            // Anpassung an das hellere Design wie bei Number Input
             decoration: BoxDecoration(
               color: Colors.white, // Heller Hintergrund
               borderRadius: BorderRadius.circular(16),
@@ -151,9 +167,7 @@ class _DragDropWordGameWidgetState extends State<DragDropWordGameWidget> with Si
                 // Reset-Button
                 TextButton.icon(
                   onPressed: () {
-                    _resetTargetSlots();
-                    sentence.resetSolution();
-                    setState(() {});
+                    _resetState(sentence);
                   },
                   icon: Icon(Icons.refresh, color: AppTheme.primaryText.withOpacity(0.7)),
                   label: Text(
@@ -187,11 +201,11 @@ class _DragDropWordGameWidgetState extends State<DragDropWordGameWidget> with Si
     );
   }
 
-  // Reset der Ziel-Slots (für UI-Darstellung)
-  void _resetTargetSlots() {
+  // Setzt den Zustand zurück
+  void _resetState(WordGameSentence sentence) {
     setState(() {
-      _targetSlots = {};
-      _placementStatus = {};
+      _placedWords = {};
+      sentence.resetSolution();
     });
   }
 
@@ -206,21 +220,16 @@ class _DragDropWordGameWidgetState extends State<DragDropWordGameWidget> with Si
             sentence.words.length,
                 (position) {
               // Prüfe, ob an dieser Position bereits ein Wort platziert ist
+              final hasPlacedWord = _placedWords.containsKey(position);
               String? placedWord;
+              bool isCorrect = true;
               int? originalIndex;
-              bool isCorrect = true; // Standard: korrekt
 
-              // Suche nach dem Wort, das an dieser Position platziert ist
-              for (int i = 0; i < sentence.words.length; i++) {
-                if (sentence.isWordPlaced(i) &&
-                    _targetSlots.containsKey(position) &&
-                    _targetSlots[position] == sentence.words[i]) {
-                  placedWord = sentence.words[i];
-                  originalIndex = i;
-                  // Überprüfe, ob die Position korrekt ist
-                  isCorrect = _placementStatus[position] ?? true;
-                  break;
-                }
+              if (hasPlacedWord) {
+                final data = _placedWords[position]!;
+                originalIndex = data.$1;
+                placedWord = data.$2;
+                isCorrect = data.$3;
               }
 
               return DroppableWordSlotWidget(
@@ -230,11 +239,20 @@ class _DragDropWordGameWidgetState extends State<DragDropWordGameWidget> with Si
                 onAccept: (originalWordIndex, targetPosition) {
                   // Aktualisiere das Spielmodell und prüfe, ob die Platzierung korrekt ist
                   final isCorrect = gameState.placeWord(originalWordIndex, targetPosition);
+                  final word = sentence.words[originalWordIndex];
 
-                  // Aktualisiere die UI
+                  // Aktualisiere die UI mit dem neuen Wort an dieser Position
                   setState(() {
-                    _targetSlots[targetPosition] = sentence.words[originalWordIndex];
-                    _placementStatus[targetPosition] = isCorrect;
+                    // Wenn das Wort bereits woanders platziert war, entferne es von dort
+                    for (int pos = 0; pos < sentence.words.length; pos++) {
+                      if (_placedWords.containsKey(pos) && _placedWords[pos]!.$1 == originalWordIndex) {
+                        _placedWords.remove(pos);
+                        break;
+                      }
+                    }
+
+                    // Füge das Wort an der neuen Position hinzu
+                    _placedWords[targetPosition] = (originalWordIndex, word, isCorrect);
                   });
 
                   // Spiele Sound entsprechend dem Ergebnis
@@ -260,6 +278,9 @@ class _DragDropWordGameWidgetState extends State<DragDropWordGameWidget> with Si
 
   // Baut den Quellbereich auf, aus dem Wörter gezogen werden - RANDOMISIERT
   Widget buildSourceArea(WordGameSentence sentence, WordGameStateModel gameState) {
+    // Sammle alle bereits platzierten Originalindices
+    final placedOriginalIndices = _placedWords.values.map((data) => data.$1).toSet();
+
     return Center(
       child: Wrap(
         spacing: 8,
@@ -271,7 +292,8 @@ class _DragDropWordGameWidgetState extends State<DragDropWordGameWidget> with Si
           final String word = entry.value.value;
           final int displayNumber = sentence.getDisplayNumberForWord(originalIndex);
 
-          final bool isPlaced = sentence.isWordPlaced(originalIndex);
+          // Prüfe, ob dieses Wort bereits in einem der Zielslots platziert wurde
+          final bool isPlaced = placedOriginalIndices.contains(originalIndex);
 
           return DraggableWordWidget(
             word: word,
@@ -284,15 +306,12 @@ class _DragDropWordGameWidgetState extends State<DragDropWordGameWidget> with Si
 
               // Aktualisiere die UI
               setState(() {
-                // Finde und entferne den Eintrag aus _targetSlots und _placementStatus
-                int? positionToRemove;
-                _targetSlots.forEach((pos, w) {
-                  if (w == word) positionToRemove = pos;
-                });
-
-                if (positionToRemove != null) {
-                  _targetSlots.remove(positionToRemove);
-                  _placementStatus.remove(positionToRemove);
+                // Finde und entferne den Eintrag aus _placedWords
+                for (int pos = 0; pos < sentence.words.length; pos++) {
+                  if (_placedWords.containsKey(pos) && _placedWords[pos]!.$1 == originalIndex) {
+                    _placedWords.remove(pos);
+                    break;
+                  }
                 }
               });
             } : null,

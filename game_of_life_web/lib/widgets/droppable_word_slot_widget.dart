@@ -1,4 +1,4 @@
-// lib/widgets/droppable_word_slot_widget.dart - Animationen verbessert
+// lib/widgets/droppable_word_slot_widget.dart - Verbesserte Version mit besseren Animationen
 
 import 'package:flutter/material.dart';
 import '../utils/app_theme.dart';
@@ -30,10 +30,12 @@ class _DroppableWordSlotWidgetState extends State<DroppableWordSlotWidget> with 
 
   bool _isAnimating = false;
   bool _isDragOver = false;
+  String? _previousWord;
 
   @override
   void initState() {
     super.initState();
+    _previousWord = widget.word;
 
     // Initialisiere den AnimationController für Feedback
     _feedbackController = AnimationController(
@@ -102,9 +104,13 @@ class _DroppableWordSlotWidgetState extends State<DroppableWordSlotWidget> with 
   void didUpdateWidget(DroppableWordSlotWidget oldWidget) {
     super.didUpdateWidget(oldWidget);
 
-    // Wenn sich der isCorrect-Status ändert oder ein neues Wort gesetzt wird, aktualisiere die Animation
-    if (oldWidget.isCorrect != widget.isCorrect || oldWidget.word != widget.word) {
-      _updateFeedbackAnimation();
+    // Reagiere, wenn ein neues Wort gesetzt wurde oder wenn sich der Korrektheitsstatus ändert
+    if (oldWidget.word != widget.word || oldWidget.isCorrect != widget.isCorrect) {
+      // Nur wenn sich das Wort ändert (nicht beim ersten Laden), starte die Animation
+      if (widget.word != null && _previousWord != widget.word) {
+        _updateFeedbackAnimation();
+        _previousWord = widget.word;
+      }
     }
   }
 
@@ -167,7 +173,7 @@ class _DroppableWordSlotWidgetState extends State<DroppableWordSlotWidget> with 
           return AnimatedBuilder(
             animation: _feedbackController,
             builder: (context, child) {
-              // Verwende die animierte Farbe und Skalierung, wenn die Animation läuft
+              // Bestimme Farbe und Animation basierend auf Zustand
               Color containerColor = _isAnimating
                   ? _colorAnimation.value ?? AppTheme.primaryAccent.withOpacity(0.7)
                   : widget.isCorrect
