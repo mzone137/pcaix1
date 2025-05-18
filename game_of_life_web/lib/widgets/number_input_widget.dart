@@ -1,5 +1,4 @@
-// lib/widgets/number_input_widget.dart - Komplett überarbeitet mit einfachem NumPad
-
+// lib/widgets/number_input_widget.dart - mit korrigiertem State-Management
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/word_game_models.dart';
@@ -25,6 +24,10 @@ class _NumberInputWidgetState extends State<NumberInputWidget> {
   // Feedback-Status
   bool? _isSequenceCorrect;
 
+  // Speichern des aktuellen Satzes für Vergleich
+  int _lastSentenceIndex = -1;
+  int _lastChapterHash = 0;  // Zur Identifikation des Kapitels
+
   @override
   void initState() {
     super.initState();
@@ -36,21 +39,30 @@ class _NumberInputWidgetState extends State<NumberInputWidget> {
   }
 
   @override
-  void didUpdateWidget(NumberInputWidget oldWidget) {
-    super.didUpdateWidget(oldWidget);
+  void didChangeDependencies() {
+    super.didChangeDependencies();
 
-    // Reset user sequence when switching to a new sentence/level
-    final currentSentence = Provider.of<WordGameStateModel>(context, listen: false).currentSentence;
-    final oldSentence = Provider.of<WordGameStateModel>(context, listen: false).currentSentence;
+    // Sicher und erlaubt, setState in didChangeDependencies aufzurufen
+    final gameState = Provider.of<WordGameStateModel>(context, listen: false);
+    final sentenceIndex = gameState.currentSentenceIndex;
+    final chapterHash = gameState.currentChapter?.hashCode ?? 0;
+    final combinedHash = chapterHash + sentenceIndex;
 
-    if (currentSentence != oldSentence) {
-      setState(() {
-        _userSequence = "";
-        _isSequenceCorrect = null;
+    // Wenn sich Kapitel oder Satz geändert haben, setze Sequenz zurück
+    if (combinedHash != _lastChapterHash || sentenceIndex != _lastSentenceIndex) {
+      // Zeitplanmäßig nach dem aktuellen Build ausführen
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          setState(() {
+            _userSequence = "";
+            _isSequenceCorrect = null;
+            _lastSentenceIndex = sentenceIndex;
+            _lastChapterHash = combinedHash;
+          });
+        }
       });
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -66,6 +78,9 @@ class _NumberInputWidgetState extends State<NumberInputWidget> {
             ),
           );
         }
+
+        // KEINE State-Änderungen mehr während des Builds
+        // (stattdessen in didChangeDependencies)
 
         // Bestimme die maximale Anzahl an Ziffern (= Anzahl der Wörter)
         final int maxDigits = sentence.words.length;

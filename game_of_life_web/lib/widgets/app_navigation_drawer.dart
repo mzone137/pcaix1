@@ -1,9 +1,9 @@
-// lib/widgets/app_navigation_drawer.dart
+// lib/widgets/app_navigation_drawer.dart - vollständig korrigiert
 import 'package:flutter/material.dart';
 import '../utils/app_theme.dart';
 import '../screens/home_screen.dart';
 import '../screens/word_game_levels_screen.dart';
-import '../screens/impressum_screen.dart'; // Diese Datei erstellen wir in Aufgabe 4
+import '../screens/impressum_screen.dart';
 
 class AppNavigationDrawer extends StatefulWidget {
   const AppNavigationDrawer({Key? key}) : super(key: key);
@@ -23,21 +23,29 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
       backgroundColor: Colors.white,
       child: Column(
         children: [
-          // Drawer Header
+          // Drawer Header - KORRIGIERT
           Container(
             padding: EdgeInsets.symmetric(vertical: 40, horizontal: 16),
             decoration: AppTheme.drawerHeaderDecoration,
             child: Row(
               children: [
                 Icon(
-                  Icons.psychology, // Neural Network Icon
-                  size: 42,
+                  Icons.psychology,
+                  size: 36, // Reduzierte Größe
                   color: AppTheme.primaryAccent,
                 ),
-                SizedBox(width: 16),
-                Text(
-                  'NEURAL NEXUS',
-                  style: AppTheme.drawerHeaderTextStyle,
+                SizedBox(width: 12), // Reduzierter Abstand
+                Expanded(  // Flexible Anpassung
+                  child: FittedBox(  // Automatische Skalierung
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      'NEURAL NEXUS',
+                      style: AppTheme.drawerHeaderTextStyle.copyWith(
+                        fontSize: 22, // Kleinere Schrift
+                      ),
+                    ),
+                  ),
                 ),
               ],
             ),
