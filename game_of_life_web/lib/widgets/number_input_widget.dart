@@ -1,4 +1,4 @@
-// lib/widgets/number_input_widget.dart - mit korrigiertem State-Management
+// lib/widgets/number_input_widget.dart - mit Fokus-Fix und verbessertem State-Management
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/word_game_models.dart';
@@ -25,8 +25,10 @@ class _NumberInputWidgetState extends State<NumberInputWidget> {
   bool? _isSequenceCorrect;
 
   // Eindeutige Identifikatoren für aktuelles Level und Satz
-  // Änderung: Nutze eine Kombination aus Kapitel und Satz ID
   String _currentIdentifier = "";
+
+  // Key für das Numpad, um vollständigen Rebuild zu erzwingen
+  final GlobalKey _numpadKey = GlobalKey();
 
   @override
   void initState() {
@@ -34,6 +36,13 @@ class _NumberInputWidgetState extends State<NumberInputWidget> {
     // Sicherstellen, dass Sequenz zu Beginn leer ist
     _userSequence = "";
     _isSequenceCorrect = null;
+
+    // Stellen Sie sicher, dass der Fokus am Anfang entfernt wird
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        FocusScope.of(context).unfocus();
+      }
+    });
   }
 
   @override
@@ -57,6 +66,9 @@ class _NumberInputWidgetState extends State<NumberInputWidget> {
             _userSequence = "";
             _isSequenceCorrect = null;
             _currentIdentifier = newIdentifier;
+
+            // Fokus explizit entfernen, um sicherzustellen, dass alle Touch-Events funktionieren
+            FocusScope.of(context).unfocus();
           });
         }
       });
@@ -187,15 +199,16 @@ class _NumberInputWidgetState extends State<NumberInputWidget> {
 
               SizedBox(height: 30),
 
-              // EINFACHES NUMPAD - Angepasstes Design
+              // EINFACHES NUMPAD - Angepasstes Design mit Key für erzwungenen Rebuild
               Expanded(
+                key: _numpadKey, // Key für erzwungenen Rebuild
                 child: buildSimpleNumpad(maxDigits, gameState, sentence),
               ),
 
               // Reset-Button - Verbesserte Implementation
               TextButton.icon(
                 onPressed: () {
-                  // Lösung für Bug 2: Kompletter Reset und UI-aktualisierung
+                  // Kompletter Reset und UI-aktualisierung
                   setState(() {
                     _userSequence = "";
                     _isSequenceCorrect = null;
@@ -290,85 +303,115 @@ class _NumberInputWidgetState extends State<NumberInputWidget> {
     );
   }
 
-  // VEREINFACHTES NUMPAD - Angepasstes Design
+  // VEREINFACHTES NUMPAD - Angepasstes Design mit verbessertem Event-Handling
   Widget buildSimpleNumpad(int maxDigits, WordGameStateModel gameState, WordGameSentence sentence) {
     // Erzeugen der Ziffern (beginnend bei 1 bis maxDigits)
     final List<int> digits = List.generate(maxDigits, (index) => index + 1);
 
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        // 3x3 Numpad Layout (oder 2 Reihen für weniger Tasten)
-        for (int row = 0; row < (digits.length / 3).ceil(); row++)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 10),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                for (int col = 0; col < 3; col++)
-                  if (row * 3 + col < digits.length)
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 10),
-                      child: _buildNumberButton(
-                        digits[row * 3 + col],
-                        onPressed: () {
-                          // Bug-Fix: Sicherstellen, dass Button-Klicks korrekt verarbeitet werden
-                          setState(() {
-                            // Füge die Ziffer zur Sequenz hinzu
-                            _userSequence += digits[row * 3 + col].toString();
-                            _isSequenceCorrect = null;
+    return LayoutBuilder(
+        builder: (context, constraints) {
+          return Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              // 3x3 Numpad Layout (oder 2 Reihen für weniger Tasten)
+              for (int row = 0; row < (digits.length / 3).ceil(); row++)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 10),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      for (int col = 0; col < 3; col++)
+                        if (row * 3 + col < digits.length)
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 10),
+                            child: _buildNumberButton(
+                              digits[row * 3 + col],
+                              onPressed: () {
+                                // Entferne den Fokus, bevor der Button-Klick verarbeitet wird
+                                FocusScope.of(context).unfocus();
 
-                            // Sound-Feedback
-                            AudioService().playWordPickupSound();
+                                // Aktualisiere mit setState für explizite UI-Aktualisierung
+                                setState(() {
+                                  // Füge die Ziffer zur Sequenz hinzu
+                                  _userSequence += digits[row * 3 + col].toString();
+                                  _isSequenceCorrect = null;
 
-                            // Automatisch prüfen, wenn die Länge der Sequenz der Anzahl der Wörter entspricht
-                            if (_userSequence.length == maxDigits) {
-                              _checkSequence(gameState, sentence);
-                            }
-                          });
-                        },
-                      ),
-                    ),
-              ],
-            ),
-          ),
-        // Überprüfen-Button
-        if (_userSequence.isNotEmpty && _userSequence.length < maxDigits)
-          ElevatedButton(
-            onPressed: () => _checkSequence(gameState, sentence),
-            child: Text('Check', style: TextStyle(color: Colors.white)),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.primaryAccent,
-              padding: EdgeInsets.symmetric(horizontal: 30, vertical: 15),
-            ),
-          ),
-      ],
+                                  // Sound-Feedback
+                                  AudioService().playWordPickupSound();
+
+                                  // Automatisch prüfen, wenn die Länge der Sequenz der Anzahl der Wörter entspricht
+                                  if (_userSequence.length == maxDigits) {
+                                    _checkSequence(gameState, sentence);
+                                  }
+                                });
+                              },
+                            ),
+                          ),
+                    ],
+                  ),
+                ),
+              // Überprüfen-Button
+              if (_userSequence.isNotEmpty && _userSequence.length < maxDigits)
+                ElevatedButton(
+                  onPressed: () {
+                    // Entferne den Fokus, bevor der Button-Klick verarbeitet wird
+                    FocusScope.of(context).unfocus();
+                    _checkSequence(gameState, sentence);
+                  },
+                  child: Text('Check', style: TextStyle(color: Colors.white)),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppTheme.primaryAccent,
+                    padding: EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+                  ),
+                ),
+            ],
+          );
+        }
     );
   }
 
-  // Numpad-Button - Angepasstes Design
+  // Numpad-Button - Angepasstes Design mit verbessertem Event-Handling
   Widget _buildNumberButton(int number, {required VoidCallback onPressed}) {
+    // Erstelle einen einzigartigen Key für jeden Button für vollständigen Rebuild
+    final buttonKey = GlobalKey();
+
     return SizedBox(
       width: 60,
       height: 60,
-      child: ElevatedButton(
-        onPressed: onPressed,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.white,
-          foregroundColor: AppTheme.primaryText,
-          shape: CircleBorder(),
-          padding: EdgeInsets.zero,
-          side: BorderSide(
-            color: AppTheme.primaryAccent.withOpacity(0.5),
-            width: 2,
+      child: GestureDetector( // GestureDetector statt ElevatedButton für besseres Touch-Handling
+        key: buttonKey,
+        onTap: () {
+          // Verwendung von Future.microtask, um sicherzustellen, dass der UI-Thread nicht blockiert wird
+          Future.microtask(() {
+            onPressed();
+          });
+        },
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            shape: BoxShape.circle,
+            border: Border.all(
+              color: AppTheme.primaryAccent.withOpacity(0.5),
+              width: 2,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black12,
+                blurRadius:.0,
+                spreadRadius: 1.0,
+                offset: Offset(0, 2),
+              ),
+            ],
           ),
-          elevation: 3, // Leichter Schatten für 3D-Effekt
-        ),
-        child: Text(
-          number.toString(),
-          style: TextStyle(
-            fontSize: 24,
-            fontWeight: FontWeight.bold,
+          child: Center(
+            child: Text(
+              number.toString(),
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.bold,
+                color: AppTheme.primaryText,
+              ),
+            ),
           ),
         ),
       ),
@@ -391,15 +434,24 @@ class _NumberInputWidgetState extends State<NumberInputWidget> {
       // Spiele Erfolgs-Sound ab
       AudioService().playSuccessSound();
 
-      // Lösung für Bug 1: Setze die Sequenz zurück, BEVOR zum nächsten Satz gewechselt wird
+      // Setze die Sequenz zurück, BEVOR zum nächsten Satz gewechselt wird
       setState(() {
         _userSequence = "";
         _isSequenceCorrect = null;
       });
 
+      // Entferne den Fokus explizit
+      FocusScope.of(context).unfocus();
+
       // Leite zum nächsten Satz weiter
       Future.delayed(Duration(milliseconds: 1000), () {
         widget.onSolutionCorrect();
+
+        // Stellen Sie sicher, dass der Fokus nach dem Übergang entfernt wird
+        if (mounted) {
+          setState(() {});
+          FocusScope.of(context).unfocus();
+        }
       });
     } else {
       // Spiele Fehler-Sound ab

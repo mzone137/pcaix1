@@ -1,4 +1,4 @@
-// lib/widgets/draggable_word_widget.dart - Aktualisiert für Anzeige der Zahlen
+// lib/widgets/draggable_word_widget.dart - Angepasst an das hellere Design
 
 import 'package:flutter/material.dart';
 import '../utils/app_theme.dart';
@@ -7,7 +7,7 @@ import '../services/audio_service.dart';
 class DraggableWordWidget extends StatelessWidget {
   final String word;
   final int originalIndex;
-  final int randomizedIndex; // Neuer Parameter für die randomisierte Zahl
+  final int randomizedIndex; // Für die randomisierte Zahl
   final bool isPlaced;
   final VoidCallback? onRemove;
 
@@ -15,7 +15,7 @@ class DraggableWordWidget extends StatelessWidget {
     Key? key,
     required this.word,
     required this.originalIndex,
-    required this.randomizedIndex, // Neue Anforderung
+    required this.randomizedIndex,
     this.isPlaced = false,
     this.onRemove,
   }) : super(key: key);
@@ -38,7 +38,7 @@ class DraggableWordWidget extends StatelessWidget {
         color: Colors.transparent,
         child: _buildWordContainer(
           context: context,
-          color: AppTheme.neonBlue.withOpacity(0.9),
+          color: AppTheme.primaryAccent.withOpacity(0.9),
           scale: 1.1,
           shadowIntensity: 0.4,
         ),
@@ -47,7 +47,7 @@ class DraggableWordWidget extends StatelessWidget {
       // Widget im Ruhezustand
       child: _buildWordContainer(
         context: context,
-        color: AppTheme.deepBlue,
+        color: AppTheme.primaryAccent.withOpacity(0.1), // Helleres Blau wie bei Number Input
       ),
 
       // Widget an der Originalposition während des Ziehens
@@ -99,8 +99,8 @@ class DraggableWordWidget extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: AppTheme.neonBlue.withOpacity(shadowIntensity),
-              blurRadius: 8,
+              color: AppTheme.primaryAccent.withOpacity(shadowIntensity),
+              blurRadius: 4,
               spreadRadius: 1,
             ),
           ],
@@ -111,8 +111,8 @@ class DraggableWordWidget extends StatelessWidget {
             Text(
               word,
               style: TextStyle(
-                color: Colors.white.withOpacity(textOpacity),
-                fontSize: 20,
+                color: AppTheme.primaryText.withOpacity(textOpacity), // Dunkler Text für besseren Kontrast
+                fontSize: 18,
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -122,10 +122,10 @@ class DraggableWordWidget extends StatelessWidget {
               width: 28,
               height: 28,
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.2),
+                color: AppTheme.primaryAccent.withOpacity(0.2),
                 shape: BoxShape.circle,
                 border: Border.all(
-                  color: Colors.white.withOpacity(0.3),
+                  color: AppTheme.primaryAccent.withOpacity(0.5),
                   width: 1,
                 ),
               ),
@@ -133,7 +133,7 @@ class DraggableWordWidget extends StatelessWidget {
                 child: Text(
                   randomizedIndex.toString(),
                   style: TextStyle(
-                    color: Colors.white.withOpacity(textOpacity),
+                    color: AppTheme.primaryText.withOpacity(textOpacity), // Dunkler Text für besseren Kontrast
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                   ),

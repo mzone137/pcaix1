@@ -1,5 +1,4 @@
-
-// lib/widgets/drag_drop_word_game_widget.dart - Angepasst für randomisierte Wortanordnung
+// lib/widgets/drag_drop_word_game_widget.dart - Angepasst an das Number Input Design
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -74,7 +73,7 @@ class _DragDropWordGameWidgetState extends State<DragDropWordGameWidget> with Si
           return Center(
             child: Text(
               'No sentence available',
-              style: TextStyle(color: Colors.white),
+              style: TextStyle(color: AppTheme.primaryText),
             ),
           );
         }
@@ -102,18 +101,19 @@ class _DragDropWordGameWidgetState extends State<DragDropWordGameWidget> with Si
           },
           child: Container(
             padding: EdgeInsets.all(16),
+            // Anpassung an das hellere Design wie bei Number Input
             decoration: BoxDecoration(
-              color: Colors.black.withOpacity(0.7),
+              color: Colors.white, // Heller Hintergrund
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                color: AppTheme.neonBlue.withOpacity(0.5),
+                color: AppTheme.primaryAccent.withOpacity(0.5),
                 width: 2,
               ),
               boxShadow: [
                 BoxShadow(
-                  color: AppTheme.neonBlue.withOpacity(0.2),
+                  color: Colors.black12,
                   blurRadius: 10,
-                  spreadRadius: 2,
+                  spreadRadius: 1,
                 ),
               ],
             ),
@@ -123,7 +123,7 @@ class _DragDropWordGameWidgetState extends State<DragDropWordGameWidget> with Si
                 Text(
                   'Drag words with numbers to arrange them in correct order',
                   style: TextStyle(
-                    color: Colors.white,
+                    color: AppTheme.primaryText, // Dunkler Text für besseren Kontrast
                     fontSize: 18,
                     fontFamily: 'Orbitron',
                   ),
@@ -138,10 +138,10 @@ class _DragDropWordGameWidgetState extends State<DragDropWordGameWidget> with Si
                   margin: EdgeInsets.symmetric(vertical: 16),
                   padding: EdgeInsets.symmetric(horizontal: 8, vertical: 12),
                   decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.5),
+                    color: Colors.grey[100], // Hellerer Hintergrund wie bei Number Input
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
-                      color: AppTheme.neonBlue.withOpacity(0.3),
+                      color: AppTheme.primaryAccent.withOpacity(0.3),
                       width: 1,
                     ),
                   ),
@@ -155,10 +155,10 @@ class _DragDropWordGameWidgetState extends State<DragDropWordGameWidget> with Si
                     sentence.resetSolution();
                     setState(() {});
                   },
-                  icon: Icon(Icons.refresh, color: Colors.white70),
+                  icon: Icon(Icons.refresh, color: AppTheme.primaryText.withOpacity(0.7)),
                   label: Text(
                     'Reset',
-                    style: TextStyle(color: Colors.white70),
+                    style: TextStyle(color: AppTheme.primaryText.withOpacity(0.7)),
                   ),
                 ),
 
@@ -166,7 +166,18 @@ class _DragDropWordGameWidgetState extends State<DragDropWordGameWidget> with Si
 
                 // Quellbereich für die Wörter (Draggables) - RANDOMISIERT
                 Expanded(
-                  child: buildSourceArea(sentence, gameState),
+                  child: Container(
+                    padding: EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: Colors.grey[100], // Hellerer Hintergrund wie bei Number Input
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: AppTheme.primaryAccent.withOpacity(0.3),
+                        width: 1,
+                      ),
+                    ),
+                    child: buildSourceArea(sentence, gameState),
+                  ),
                 ),
               ],
             ),
@@ -249,51 +260,44 @@ class _DragDropWordGameWidgetState extends State<DragDropWordGameWidget> with Si
 
   // Baut den Quellbereich auf, aus dem Wörter gezogen werden - RANDOMISIERT
   Widget buildSourceArea(WordGameSentence sentence, WordGameStateModel gameState) {
-    return Container(
-      padding: EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.black38,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Center(
-        child: Wrap(
-          spacing: 8,
-          runSpacing: 12,
-          alignment: WrapAlignment.center,
-          children: sentence.randomizedWordsWithIndices.entries.map((entry) {
-            // Verwende die randomisierte Anordnung
-            final int originalIndex = entry.value.key;
-            final String word = entry.value.value;
-            final int displayNumber = sentence.getDisplayNumberForWord(originalIndex);
+    return Center(
+      child: Wrap(
+        spacing: 8,
+        runSpacing: 12,
+        alignment: WrapAlignment.center,
+        children: sentence.randomizedWordsWithIndices.entries.map((entry) {
+          // Verwende die randomisierte Anordnung
+          final int originalIndex = entry.value.key;
+          final String word = entry.value.value;
+          final int displayNumber = sentence.getDisplayNumberForWord(originalIndex);
 
-            final bool isPlaced = sentence.isWordPlaced(originalIndex);
+          final bool isPlaced = sentence.isWordPlaced(originalIndex);
 
-            return DraggableWordWidget(
-              word: word,
-              originalIndex: originalIndex,
-              randomizedIndex: displayNumber,
-              isPlaced: isPlaced,
-              onRemove: isPlaced ? () {
-                // Entferne das Wort aus dem Zielbereich
-                gameState.removeWord(originalIndex);
+          return DraggableWordWidget(
+            word: word,
+            originalIndex: originalIndex,
+            randomizedIndex: displayNumber,
+            isPlaced: isPlaced,
+            onRemove: isPlaced ? () {
+              // Entferne das Wort aus dem Zielbereich
+              gameState.removeWord(originalIndex);
 
-                // Aktualisiere die UI
-                setState(() {
-                  // Finde und entferne den Eintrag aus _targetSlots und _placementStatus
-                  int? positionToRemove;
-                  _targetSlots.forEach((pos, w) {
-                    if (w == word) positionToRemove = pos;
-                  });
-
-                  if (positionToRemove != null) {
-                    _targetSlots.remove(positionToRemove);
-                    _placementStatus.remove(positionToRemove);
-                  }
+              // Aktualisiere die UI
+              setState(() {
+                // Finde und entferne den Eintrag aus _targetSlots und _placementStatus
+                int? positionToRemove;
+                _targetSlots.forEach((pos, w) {
+                  if (w == word) positionToRemove = pos;
                 });
-              } : null,
-            );
-          }).toList(),
-        ),
+
+                if (positionToRemove != null) {
+                  _targetSlots.remove(positionToRemove);
+                  _placementStatus.remove(positionToRemove);
+                }
+              });
+            } : null,
+          );
+        }).toList(),
       ),
     );
   }

@@ -1,4 +1,4 @@
-// lib/widgets/droppable_word_slot_widget.dart - Aktualisiert für Feedback bei richtigen/falschen Platzierungen
+// lib/widgets/droppable_word_slot_widget.dart - Animationen verbessert
 
 import 'package:flutter/material.dart';
 import '../utils/app_theme.dart';
@@ -8,14 +8,14 @@ class DroppableWordSlotWidget extends StatefulWidget {
   final int position;
   final String? word;
   final Function(int, int) onAccept; // originalIndex, targetPosition
-  final bool isCorrect; // Neues Feld für visuelles Feedback
+  final bool isCorrect;
 
   const DroppableWordSlotWidget({
     Key? key,
     required this.position,
     this.word,
     required this.onAccept,
-    this.isCorrect = true, // Standardmäßig nehmen wir an, es ist korrekt
+    this.isCorrect = true,
   }) : super(key: key);
 
   @override
@@ -25,8 +25,11 @@ class DroppableWordSlotWidget extends StatefulWidget {
 class _DroppableWordSlotWidgetState extends State<DroppableWordSlotWidget> with SingleTickerProviderStateMixin {
   late AnimationController _feedbackController;
   late Animation<Color?> _colorAnimation;
+  late Animation<double> _scaleAnimation;
+  late Animation<double> _shakeAnimation;
 
   bool _isAnimating = false;
+  bool _isDragOver = false;
 
   @override
   void initState() {
@@ -34,19 +37,55 @@ class _DroppableWordSlotWidgetState extends State<DroppableWordSlotWidget> with 
 
     // Initialisiere den AnimationController für Feedback
     _feedbackController = AnimationController(
-      duration: Duration(milliseconds: 500),
+      duration: Duration(milliseconds: 600),
       vsync: this,
     );
 
     // Animation für Farbwechsel (normal -> Feedback -> normal)
     _colorAnimation = ColorTween(
-      begin: AppTheme.neonBlue.withOpacity(0.7),
+      begin: AppTheme.primaryAccent.withOpacity(0.7),
       end: widget.isCorrect ? Colors.green.withOpacity(0.7) : Colors.red.withOpacity(0.7),
     ).animate(CurvedAnimation(
       parent: _feedbackController,
       curve: Interval(0.0, 0.5, curve: Curves.easeInOut),
       reverseCurve: Interval(0.5, 1.0, curve: Curves.easeInOut),
     ));
+
+    // Animation für Skalierung (Pulsieren bei Feedback)
+    _scaleAnimation = TweenSequence<double>([
+      TweenSequenceItem(
+        tween: Tween<double>(begin: 1.0, end: 1.1).chain(CurveTween(curve: Curves.easeInOut)),
+        weight: 1,
+      ),
+      TweenSequenceItem(
+        tween: Tween<double>(begin: 1.1, end: 1.0).chain(CurveTween(curve: Curves.easeInOut)),
+        weight: 1,
+      ),
+    ]).animate(_feedbackController);
+
+    // Animation für Schütteln (bei falscher Platzierung)
+    _shakeAnimation = TweenSequence<double>([
+      TweenSequenceItem(
+        tween: Tween<double>(begin: 0.0, end: -5.0).chain(CurveTween(curve: Curves.easeInOut)),
+        weight: 1,
+      ),
+      TweenSequenceItem(
+        tween: Tween<double>(begin: -5.0, end: 5.0).chain(CurveTween(curve: Curves.easeInOut)),
+        weight: 2,
+      ),
+      TweenSequenceItem(
+        tween: Tween<double>(begin: 5.0, end: -3.0).chain(CurveTween(curve: Curves.easeInOut)),
+        weight: 2,
+      ),
+      TweenSequenceItem(
+        tween: Tween<double>(begin: -3.0, end: 3.0).chain(CurveTween(curve: Curves.easeInOut)),
+        weight: 2,
+      ),
+      TweenSequenceItem(
+        tween: Tween<double>(begin: 3.0, end: 0.0).chain(CurveTween(curve: Curves.easeInOut)),
+        weight: 1,
+      ),
+    ]).animate(_feedbackController);
 
     _feedbackController.addStatusListener((status) {
       if (status == AnimationStatus.completed) {
@@ -63,7 +102,7 @@ class _DroppableWordSlotWidgetState extends State<DroppableWordSlotWidget> with 
   void didUpdateWidget(DroppableWordSlotWidget oldWidget) {
     super.didUpdateWidget(oldWidget);
 
-    // Wenn sich der isCorrect-Status ändert, aktualisiere die Animation
+    // Wenn sich der isCorrect-Status ändert oder ein neues Wort gesetzt wird, aktualisiere die Animation
     if (oldWidget.isCorrect != widget.isCorrect || oldWidget.word != widget.word) {
       _updateFeedbackAnimation();
     }
@@ -72,7 +111,7 @@ class _DroppableWordSlotWidgetState extends State<DroppableWordSlotWidget> with 
   void _updateFeedbackAnimation() {
     // Aktualisiere die Farbe der Animation
     _colorAnimation = ColorTween(
-      begin: AppTheme.neonBlue.withOpacity(0.7),
+      begin: AppTheme.primaryAccent.withOpacity(0.7),
       end: widget.isCorrect ? Colors.green.withOpacity(0.7) : Colors.red.withOpacity(0.7),
     ).animate(CurvedAnimation(
       parent: _feedbackController,
@@ -99,52 +138,73 @@ class _DroppableWordSlotWidgetState extends State<DroppableWordSlotWidget> with 
   Widget build(BuildContext context) {
     return DragTarget<int>(
       // Diese Funktion wird aufgerufen, wenn ein Draggable über diesem Widget schwebt
-      // Gibt an, ob das Draggable akzeptiert wird
-      onWillAccept: (data) => true,  // Akzeptiere alle Wörter
+      onWillAccept: (data) {
+        setState(() {
+          _isDragOver = true;
+        });
+        return true;  // Akzeptiere alle Wörter
+      },
+
+      onLeave: (data) {
+        setState(() {
+          _isDragOver = false;
+        });
+      },
 
       // Diese Funktion wird aufgerufen, wenn ein Draggable abgelegt wird
       onAccept: (originalWordIndex) {
+        setState(() {
+          _isDragOver = false;
+        });
         widget.onAccept(originalWordIndex, widget.position);
         AudioService().playWordDropSound();
       },
 
       // Builder für das Widget
       builder: (context, candidateData, rejectedData) {
-        // Wenn ein Drop-Kandidat vorhanden ist, zeige Highlight
-        final bool isActive = candidateData.isNotEmpty;
-
         // Wenn ein Wort platziert ist, zeige es an
         if (widget.word != null) {
           return AnimatedBuilder(
-            animation: _colorAnimation,
+            animation: _feedbackController,
             builder: (context, child) {
-              // Verwende die animierte Farbe, wenn die Animation läuft, sonst die statische Farbe
+              // Verwende die animierte Farbe und Skalierung, wenn die Animation läuft
               Color containerColor = _isAnimating
-                  ? _colorAnimation.value ?? AppTheme.neonBlue.withOpacity(0.7)
+                  ? _colorAnimation.value ?? AppTheme.primaryAccent.withOpacity(0.7)
                   : widget.isCorrect
-                  ? AppTheme.neonBlue.withOpacity(0.7)
+                  ? AppTheme.primaryAccent.withOpacity(0.7)
                   : Colors.red.withOpacity(0.7);
 
-              return Container(
-                margin: EdgeInsets.symmetric(horizontal: 4),
-                padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                decoration: BoxDecoration(
-                  color: containerColor,
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: containerColor.withOpacity(0.5),
-                      blurRadius: 8,
-                      spreadRadius: 1,
+              double scale = _isAnimating ? _scaleAnimation.value : 1.0;
+              double offsetX = widget.isCorrect ? 0.0 : (_isAnimating ? _shakeAnimation.value : 0.0);
+
+              return Transform.translate(
+                offset: Offset(offsetX, 0),
+                child: Transform.scale(
+                  scale: scale,
+                  child: AnimatedContainer(
+                    duration: Duration(milliseconds: 300),
+                    curve: Curves.easeInOut,
+                    margin: EdgeInsets.symmetric(horizontal: 4),
+                    padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: containerColor,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: containerColor.withOpacity(0.5),
+                          blurRadius: 8,
+                          spreadRadius: 1,
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-                child: Text(
-                  widget.word!,
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 22,
-                    fontWeight: FontWeight.w500,
+                    child: Text(
+                      widget.word!,
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 22,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
                   ),
                 ),
               );
@@ -153,25 +213,26 @@ class _DroppableWordSlotWidgetState extends State<DroppableWordSlotWidget> with 
         }
 
         // Ansonsten zeige leeren Slot
-        return Container(
+        return AnimatedContainer(
+          duration: Duration(milliseconds: 200),
           margin: EdgeInsets.symmetric(horizontal: 4),
           height: 40,
-          width: 100,  // Minimal-Breite für leeren Slot
+          width: _isDragOver ? 120 : 100,  // Breite ändern, wenn Drag drüber
           decoration: BoxDecoration(
-            color: isActive
-                ? AppTheme.neonBlue.withOpacity(0.2)
-                : Colors.black45,
+            color: _isDragOver
+                ? AppTheme.primaryAccent.withOpacity(0.2)
+                : Colors.white,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: isActive
-                  ? AppTheme.neonBlue
-                  : AppTheme.neonBlue.withOpacity(0.3),
-              width: 2,
+              color: _isDragOver
+                  ? AppTheme.primaryAccent
+                  : AppTheme.primaryAccent.withOpacity(0.3),
+              width: _isDragOver ? 2 : 1,
             ),
-            boxShadow: isActive
+            boxShadow: _isDragOver
                 ? [
               BoxShadow(
-                color: AppTheme.neonBlue.withOpacity(0.2),
+                color: AppTheme.primaryAccent.withOpacity(0.2),
                 blurRadius: 12,
                 spreadRadius: 2,
               ),
@@ -179,10 +240,10 @@ class _DroppableWordSlotWidgetState extends State<DroppableWordSlotWidget> with 
                 : [],
           ),
           child: Center(
-            child: isActive
+            child: _isDragOver
                 ? Icon(
               Icons.add,
-              color: AppTheme.neonBlue,
+              color: AppTheme.primaryAccent,
             )
                 : null,
           ),
