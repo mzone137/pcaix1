@@ -2,15 +2,21 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'models/game_state.dart';
+import 'models/word_game_models.dart';
 import 'screens/landing_page.dart';
+import 'services/chiptune_service.dart';
 
 void main() {
   // Stellen Sie sicher, dass Flutter-Widgets initialisiert sind
   WidgetsFlutterBinding.ensureInitialized();
 
   runApp(
-    ChangeNotifierProvider(
-      create: (context) => GameStateModel(),
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (context) => GameStateModel()),
+        ChangeNotifierProvider(create: (context) => WordGameStateModel()),
+        ChangeNotifierProvider(create: (context) => ChiptuneService()),
+      ],
       child: const MyApp(),
     ),
   );
