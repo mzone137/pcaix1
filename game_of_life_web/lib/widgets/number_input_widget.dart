@@ -24,40 +24,39 @@ class _NumberInputWidgetState extends State<NumberInputWidget> {
   // Feedback-Status
   bool? _isSequenceCorrect;
 
-  // Speichern des aktuellen Satzes für Vergleich
-  int _lastSentenceIndex = -1;
-  int _lastChapterHash = 0;  // Zur Identifikation des Kapitels
+  // Eindeutige Identifikatoren für aktuelles Level und Satz
+  // Änderung: Nutze eine Kombination aus Kapitel und Satz ID
+  String _currentIdentifier = "";
 
   @override
   void initState() {
     super.initState();
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
+    // Sicherstellen, dass Sequenz zu Beginn leer ist
+    _userSequence = "";
+    _isSequenceCorrect = null;
   }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
 
-    // Sicher und erlaubt, setState in didChangeDependencies aufzurufen
     final gameState = Provider.of<WordGameStateModel>(context, listen: false);
-    final sentenceIndex = gameState.currentSentenceIndex;
-    final chapterHash = gameState.currentChapter?.hashCode ?? 0;
-    final combinedHash = chapterHash + sentenceIndex;
 
-    // Wenn sich Kapitel oder Satz geändert haben, setze Sequenz zurück
-    if (combinedHash != _lastChapterHash || sentenceIndex != _lastSentenceIndex) {
-      // Zeitplanmäßig nach dem aktuellen Build ausführen
+    // Erstelle einen eindeutigen Identifier aus Kapitel und Satz
+    final chapter = gameState.currentChapter;
+    final sentenceIndex = gameState.currentSentenceIndex;
+
+    // Eindeutiger Identifier für die aktuelle Kombination aus Kapitel und Satz
+    final newIdentifier = "${chapter?.hashCode}-$sentenceIndex";
+
+    // Wenn sich der Identifier geändert hat, setze die Sequenz zurück
+    if (_currentIdentifier != newIdentifier) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
           setState(() {
             _userSequence = "";
             _isSequenceCorrect = null;
-            _lastSentenceIndex = sentenceIndex;
-            _lastChapterHash = combinedHash;
+            _currentIdentifier = newIdentifier;
           });
         }
       });
@@ -74,13 +73,10 @@ class _NumberInputWidgetState extends State<NumberInputWidget> {
           return Center(
             child: Text(
               'No sentence available',
-              style: TextStyle(color: Colors.white),
+              style: TextStyle(color: AppTheme.primaryText),
             ),
           );
         }
-
-        // KEINE State-Änderungen mehr während des Builds
-        // (stattdessen in didChangeDependencies)
 
         // Bestimme die maximale Anzahl an Ziffern (= Anzahl der Wörter)
         final int maxDigits = sentence.words.length;
@@ -88,12 +84,19 @@ class _NumberInputWidgetState extends State<NumberInputWidget> {
         return Container(
           padding: EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: Colors.black.withOpacity(0.7),
+            color: Colors.white, // Hellerer Hintergrund im Stil von landing_page
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: AppTheme.neonBlue.withOpacity(0.5),
+              color: AppTheme.primaryAccent.withOpacity(0.5),
               width: 2,
             ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black12,
+                blurRadius: 10,
+                spreadRadius: 1,
+              ),
+            ],
           ),
           child: Column(
             children: [
@@ -101,7 +104,7 @@ class _NumberInputWidgetState extends State<NumberInputWidget> {
               Text(
                 'Enter the sequence of numbers for correct word order',
                 style: TextStyle(
-                  color: Colors.white,
+                  color: AppTheme.primaryText, // Dunkler Text für besseren Kontrast
                   fontSize: 18,
                   fontFamily: 'Orbitron',
                 ),
@@ -110,15 +113,15 @@ class _NumberInputWidgetState extends State<NumberInputWidget> {
 
               SizedBox(height: 24),
 
-              // Anzeige des Satzes mit Wörtern und Zahlen - RANDOMISIERT
+              // Anzeige des Satzes mit Wörtern und Zahlen - Angepasstes Design
               Container(
                 margin: EdgeInsets.symmetric(vertical: 16),
                 padding: EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.black45,
+                  color: Colors.grey[100], // Hellerer Hintergrund
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
-                    color: AppTheme.neonBlue.withOpacity(0.3),
+                    color: AppTheme.primaryAccent.withOpacity(0.3),
                     width: 1,
                   ),
                 ),
@@ -127,21 +130,21 @@ class _NumberInputWidgetState extends State<NumberInputWidget> {
 
               SizedBox(height: 20),
 
-              // Eingabefeld für die Sequenz - VEREINFACHT
+              // Eingabefeld für die Sequenz - Angepasstes Design
               Container(
                 height: 70,
                 margin: EdgeInsets.symmetric(horizontal: 20),
                 padding: EdgeInsets.symmetric(horizontal: 24, vertical: 16),
                 decoration: BoxDecoration(
                   color: _isSequenceCorrect == null
-                      ? Colors.black45
+                      ? Colors.white
                       : _isSequenceCorrect == true
-                      ? Colors.green.withOpacity(0.3)
-                      : Colors.red.withOpacity(0.3),
+                      ? Colors.green.withOpacity(0.1)
+                      : Colors.red.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
                     color: _isSequenceCorrect == null
-                        ? AppTheme.neonBlue
+                        ? AppTheme.primaryAccent
                         : _isSequenceCorrect == true
                         ? Colors.green
                         : Colors.red,
@@ -157,8 +160,8 @@ class _NumberInputWidgetState extends State<NumberInputWidget> {
                             : _userSequence,
                         style: TextStyle(
                           color: _userSequence.isEmpty
-                              ? Colors.white54
-                              : Colors.white,
+                              ? AppTheme.primaryText.withOpacity(0.5)
+                              : AppTheme.primaryText,
                           fontSize: 24,
                           fontWeight: FontWeight.bold,
                           letterSpacing: 8,
@@ -168,7 +171,7 @@ class _NumberInputWidgetState extends State<NumberInputWidget> {
                     ),
                     if (_userSequence.isNotEmpty)
                       IconButton(
-                        icon: Icon(Icons.backspace_outlined, color: Colors.white70),
+                        icon: Icon(Icons.backspace_outlined, color: AppTheme.primaryText.withOpacity(0.7)),
                         onPressed: () {
                           setState(() {
                             if (_userSequence.isNotEmpty) {
@@ -184,23 +187,34 @@ class _NumberInputWidgetState extends State<NumberInputWidget> {
 
               SizedBox(height: 30),
 
-              // EINFACHES NUMPAD
+              // EINFACHES NUMPAD - Angepasstes Design
               Expanded(
                 child: buildSimpleNumpad(maxDigits, gameState, sentence),
               ),
 
-              // Reset-Button
+              // Reset-Button - Verbesserte Implementation
               TextButton.icon(
                 onPressed: () {
+                  // Lösung für Bug 2: Kompletter Reset und UI-aktualisierung
                   setState(() {
                     _userSequence = "";
                     _isSequenceCorrect = null;
                   });
+
+                  // Fokus entfernen um eventuell hängende Fokus-Probleme zu lösen
+                  FocusScope.of(context).unfocus();
+
+                  // Erzwinge UI-Update nach kurzem Delay
+                  Future.delayed(Duration.zero, () {
+                    if (mounted) {
+                      setState(() {});
+                    }
+                  });
                 },
-                icon: Icon(Icons.refresh, color: Colors.white70),
+                icon: Icon(Icons.refresh, color: AppTheme.primaryText.withOpacity(0.7)),
                 label: Text(
                   'Reset',
-                  style: TextStyle(color: Colors.white70),
+                  style: TextStyle(color: AppTheme.primaryText.withOpacity(0.7)),
                 ),
               ),
             ],
@@ -210,14 +224,13 @@ class _NumberInputWidgetState extends State<NumberInputWidget> {
     );
   }
 
-  // Baut die Anzeige der Wörter mit ihren Zahlen - RANDOMISIERT
+  // Baut die Anzeige der Wörter mit ihren Zahlen - Angepasstes Design
   Widget buildWordListDisplay(WordGameSentence sentence) {
     return Wrap(
       spacing: 8,
       runSpacing: 12,
       alignment: WrapAlignment.center,
       children: sentence.randomizedWordsWithIndices.entries.map((entry) {
-        final int displayPosition = entry.key;
         final int originalIndex = entry.value.key;
         final String word = entry.value.value;
         final int displayNumber = sentence.getDisplayNumberForWord(originalIndex);
@@ -225,13 +238,13 @@ class _NumberInputWidgetState extends State<NumberInputWidget> {
         return Container(
           padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           decoration: BoxDecoration(
-            color: AppTheme.deepBlue,
+            color: AppTheme.primaryAccent.withOpacity(0.1), // Helles Blau
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: AppTheme.neonBlue.withOpacity(0.2),
-                blurRadius: 8,
-                spreadRadius: 1,
+                color: Colors.black12,
+                blurRadius: 4,
+                spreadRadius: 0.5,
               ),
             ],
           ),
@@ -241,7 +254,7 @@ class _NumberInputWidgetState extends State<NumberInputWidget> {
               Text(
                 word,
                 style: TextStyle(
-                  color: Colors.white,
+                  color: AppTheme.primaryText,
                   fontSize: 18,
                   fontWeight: FontWeight.w500,
                 ),
@@ -252,10 +265,10 @@ class _NumberInputWidgetState extends State<NumberInputWidget> {
                 width: 28,
                 height: 28,
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
+                  color: AppTheme.primaryAccent.withOpacity(0.2),
                   shape: BoxShape.circle,
                   border: Border.all(
-                    color: Colors.white.withOpacity(0.3),
+                    color: AppTheme.primaryAccent.withOpacity(0.5),
                     width: 1,
                   ),
                 ),
@@ -263,7 +276,7 @@ class _NumberInputWidgetState extends State<NumberInputWidget> {
                   child: Text(
                     displayNumber.toString(),
                     style: TextStyle(
-                      color: Colors.white,
+                      color: AppTheme.primaryText,
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
                     ),
@@ -277,7 +290,7 @@ class _NumberInputWidgetState extends State<NumberInputWidget> {
     );
   }
 
-  // VEREINFACHTES NUMPAD
+  // VEREINFACHTES NUMPAD - Angepasstes Design
   Widget buildSimpleNumpad(int maxDigits, WordGameStateModel gameState, WordGameSentence sentence) {
     // Erzeugen der Ziffern (beginnend bei 1 bis maxDigits)
     final List<int> digits = List.generate(maxDigits, (index) => index + 1);
@@ -299,6 +312,7 @@ class _NumberInputWidgetState extends State<NumberInputWidget> {
                       child: _buildNumberButton(
                         digits[row * 3 + col],
                         onPressed: () {
+                          // Bug-Fix: Sicherstellen, dass Button-Klicks korrekt verarbeitet werden
                           setState(() {
                             // Füge die Ziffer zur Sequenz hinzu
                             _userSequence += digits[row * 3 + col].toString();
@@ -322,9 +336,9 @@ class _NumberInputWidgetState extends State<NumberInputWidget> {
         if (_userSequence.isNotEmpty && _userSequence.length < maxDigits)
           ElevatedButton(
             onPressed: () => _checkSequence(gameState, sentence),
-            child: Text('Check'),
+            child: Text('Check', style: TextStyle(color: Colors.white)),
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.neonBlue,
+              backgroundColor: AppTheme.primaryAccent,
               padding: EdgeInsets.symmetric(horizontal: 30, vertical: 15),
             ),
           ),
@@ -332,7 +346,7 @@ class _NumberInputWidgetState extends State<NumberInputWidget> {
     );
   }
 
-  // Numpad-Button
+  // Numpad-Button - Angepasstes Design
   Widget _buildNumberButton(int number, {required VoidCallback onPressed}) {
     return SizedBox(
       width: 60,
@@ -340,14 +354,15 @@ class _NumberInputWidgetState extends State<NumberInputWidget> {
       child: ElevatedButton(
         onPressed: onPressed,
         style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.black45,
-          foregroundColor: Colors.white,
+          backgroundColor: Colors.white,
+          foregroundColor: AppTheme.primaryText,
           shape: CircleBorder(),
           padding: EdgeInsets.zero,
           side: BorderSide(
-            color: AppTheme.neonBlue.withOpacity(0.5),
+            color: AppTheme.primaryAccent.withOpacity(0.5),
             width: 2,
           ),
+          elevation: 3, // Leichter Schatten für 3D-Effekt
         ),
         child: Text(
           number.toString(),
@@ -375,6 +390,12 @@ class _NumberInputWidgetState extends State<NumberInputWidget> {
     if (isCorrect) {
       // Spiele Erfolgs-Sound ab
       AudioService().playSuccessSound();
+
+      // Lösung für Bug 1: Setze die Sequenz zurück, BEVOR zum nächsten Satz gewechselt wird
+      setState(() {
+        _userSequence = "";
+        _isSequenceCorrect = null;
+      });
 
       // Leite zum nächsten Satz weiter
       Future.delayed(Duration(milliseconds: 1000), () {

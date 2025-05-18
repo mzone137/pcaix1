@@ -1,4 +1,4 @@
-// lib/widgets/word_game_timer_widget.dart
+// lib/widgets/word_game_timer_widget.dart - Angepasst für helleres Design
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -14,23 +14,23 @@ class WordGameTimerWidget extends StatefulWidget {
 
 class _WordGameTimerWidgetState extends State<WordGameTimerWidget> {
   late ValueNotifier<Duration> _timeNotifier;
-  
+
   @override
   void initState() {
     super.initState();
     _timeNotifier = ValueNotifier<Duration>(Duration.zero);
-    
+
     // Starten des Timer-Updates
     _startTimer();
   }
-  
+
   void _startTimer() {
     Future.delayed(const Duration(milliseconds: 100), () {
       if (!mounted) return;
-      
+
       final gameState = Provider.of<WordGameStateModel>(context, listen: false);
       _timeNotifier.value = gameState.currentTime;
-      
+
       if (gameState.isGameActive) {
         _startTimer(); // Rekursiver Aufruf für kontinuierliches Updating
       }
@@ -48,12 +48,19 @@ class _WordGameTimerWidgetState extends State<WordGameTimerWidget> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: Colors.black45,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: AppTheme.neonBlue.withOpacity(0.4),
+          color: AppTheme.primaryAccent.withOpacity(0.4),
           width: 1,
         ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 4,
+            spreadRadius: 1,
+          ),
+        ],
       ),
       child: ValueListenableBuilder<Duration>(
         valueListenable: _timeNotifier,
@@ -62,20 +69,20 @@ class _WordGameTimerWidgetState extends State<WordGameTimerWidget> {
           final minutes = duration.inMinutes.remainder(60).toString().padLeft(2, '0');
           final seconds = duration.inSeconds.remainder(60).toString().padLeft(2, '0');
           final milliseconds = (duration.inMilliseconds.remainder(1000) ~/ 10).toString().padLeft(2, '0');
-          
+
           return Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(
                 Icons.timer,
-                color: AppTheme.neonBlue,
+                color: AppTheme.primaryAccent,
                 size: 16,
               ),
               SizedBox(width: 4),
               Text(
                 '$minutes:$seconds:$milliseconds',
                 style: TextStyle(
-                  color: Colors.white,
+                  color: AppTheme.primaryText,
                   fontFamily: 'Orbitron',
                   fontWeight: FontWeight.bold,
                   fontSize: 16,

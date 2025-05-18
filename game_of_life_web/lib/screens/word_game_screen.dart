@@ -1,6 +1,4 @@
-
-// lib/screens/word_game_screen.dart - Angepasst für Spielmodus-Toggle
-
+// lib/screens/word_game_screen.dart - Angepasst für helleres Design
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../models/word_game_models.dart';
@@ -60,52 +58,165 @@ class _WordGameScreenState extends State<WordGameScreen> {
       return Scaffold(
         appBar: AppBar(
           title: Text('Error'),
-          backgroundColor: Colors.black87,
+          backgroundColor: AppTheme.primaryAccent,
         ),
         body: Center(
-          child: Text('No level selected', style: TextStyle(color: Colors.white)),
+          child: Text('No level selected', style: TextStyle(color: AppTheme.primaryText)),
         ),
       );
     }
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(gameState.currentLevel!.title),
-        backgroundColor: Colors.black87,
+        title: Text(
+          gameState.currentLevel!.title,
+          style: TextStyle(color: Colors.white),
+        ),
+        backgroundColor: AppTheme.primaryAccent,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () {
             gameState.resetGame();
             Navigator.pop(context);
           },
         ),
       ),
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Colors.black,
-              AppTheme.deepBlue.withOpacity(0.8),
-              Colors.black,
-            ],
-          ),
-        ),
-        child: Column(
-          children: [
-            // Game mode toggle (oberhalb der Kapitelauswahl)
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: GameModeToggleWidget(),
+      // Helles Hintergrund-Design wie in landing_page
+      backgroundColor: AppTheme.creamBackground,
+      body: Column(
+        children: [
+          // Game mode toggle (oberhalb der Kapitelauswahl)
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 4,
+                    spreadRadius: 1,
+                  ),
+                ],
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: GameModeToggleWidget(),
+              ),
             ),
+          ),
 
-            Expanded(
+          Expanded(
+            child: Container(
+              margin: const EdgeInsets.all(16.0),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 4,
+                    spreadRadius: 1,
+                  ),
+                ],
+              ),
               child: ChapterSelectionWidget(
                 level: gameState.currentLevel!,
                 onChapterSelected: (chapter) {
                   gameState.selectChapter(chapter);
                 },
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGameScreen(BuildContext context, WordGameStateModel gameState) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(
+          gameState.currentChapter!.title,
+          style: TextStyle(color: Colors.white),
+        ),
+        backgroundColor: AppTheme.primaryAccent,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.home, color: Colors.white),
+            onPressed: () {
+              _showExitConfirmation(context, gameState);
+            },
+          ),
+        ],
+      ),
+      // Helles Hintergrund-Design wie in landing_page
+      backgroundColor: AppTheme.creamBackground,
+      body: SafeArea(
+        child: Column(
+          children: [
+            // Progress Bar
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+              child: LinearProgressIndicator(
+                value: gameState.currentSentenceIndex /
+                    gameState.currentChapter!.sentences.length,
+                backgroundColor: Colors.grey[300],
+                valueColor: AlwaysStoppedAnimation<Color>(AppTheme.primaryAccent),
+              ),
+            ),
+
+            // Sentence counter and timer
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Sentence ${gameState.currentSentenceIndex + 1} of ${gameState.currentChapter!.sentences.length}',
+                    style: TextStyle(color: AppTheme.primaryText),
+                  ),
+                  WordGameTimerWidget(),
+                ],
+              ),
+            ),
+
+            SizedBox(height: 8),
+
+            // Game Mode Toggle
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.05),
+                      blurRadius: 4,
+                      spreadRadius: 1,
+                    ),
+                  ],
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: GameModeToggleWidget(),
+                ),
+              ),
+            ),
+
+            // Hauptspielbereich - basierend auf ausgewähltem Modus
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: gameState.useDragAndDrop
+                    ? DragDropWordGameWidget(
+                  onSolutionCorrect: () => _handleCorrectSolution(context, gameState),
+                )
+                    : NumberInputWidget(
+                  onSolutionCorrect: () => _handleCorrectSolution(context, gameState),
+                ),
               ),
             ),
           ],
@@ -114,107 +225,18 @@ class _WordGameScreenState extends State<WordGameScreen> {
     );
   }
 
-  Widget _buildGameScreen(BuildContext context, WordGameStateModel gameState) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text(gameState.currentChapter!.title),
-        backgroundColor: Colors.black87,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.home),
-            onPressed: () {
-              _showExitConfirmation(context, gameState);
-            },
-          ),
-        ],
-      ),
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Colors.black,
-              AppTheme.deepBlue.withOpacity(0.8),
-              Colors.black,
-            ],
-          ),
-        ),
-        child: SafeArea(
-          child: Column(
-            children: [
-              // Progress Bar
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-                child: LinearProgressIndicator(
-                  value: gameState.currentSentenceIndex /
-                      gameState.currentChapter!.sentences.length,
-                  backgroundColor: Colors.grey[800],
-                  valueColor: AlwaysStoppedAnimation<Color>(AppTheme.neonBlue),
-                ),
-              ),
-
-              // Sentence counter and timer
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Sentence ${gameState.currentSentenceIndex + 1} of ${gameState.currentChapter!.sentences.length}',
-                      style: TextStyle(color: Colors.white70),
-                    ),
-                    WordGameTimerWidget(),
-                  ],
-                ),
-              ),
-
-              SizedBox(height: 8),
-
-              // Game Mode Toggle
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                child: GameModeToggleWidget(),
-              ),
-
-              // Hauptspielbereich - basierend auf ausgewähltem Modus
-              Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: gameState.useDragAndDrop
-                      ? DragDropWordGameWidget(
-                    onSolutionCorrect: () => _handleCorrectSolution(context, gameState),
-                  )
-                      : NumberInputWidget(
-                    onSolutionCorrect: () => _handleCorrectSolution(context, gameState),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
   Widget _buildResultsScreen(BuildContext context, WordGameStateModel gameState) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Results'),
-        backgroundColor: Colors.black87,
+        title: Text('Results', style: TextStyle(color: Colors.white)),
+        backgroundColor: AppTheme.primaryAccent,
         automaticallyImplyLeading: false,
       ),
+      // Helles Hintergrund-Design wie in landing_page
+      backgroundColor: AppTheme.creamBackground,
       body: Container(
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Colors.black,
-              AppTheme.deepBlue.withOpacity(0.8),
-              Colors.black,
-            ],
-          ),
+          color: AppTheme.creamBackground,
         ),
         child: WordGameResultsWidget(
           chapter: gameState.currentChapter!,
@@ -237,7 +259,7 @@ class _WordGameScreenState extends State<WordGameScreen> {
         return FadeTransition(
           opacity: Tween<double>(begin: 0.0, end: 1.0).animate(animation),
           child: Container(
-            color: Colors.black,
+            color: Colors.black.withOpacity(0.7),
             child: Center(
               child: Icon(
                 Icons.check_circle_outline,
@@ -262,21 +284,21 @@ class _WordGameScreenState extends State<WordGameScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        backgroundColor: Colors.black87,
+        backgroundColor: Colors.white,
         title: Text(
           'Exit Game?',
-          style: TextStyle(color: Colors.white),
+          style: TextStyle(color: AppTheme.primaryText, fontFamily: 'Orbitron'),
         ),
         content: Text(
           'Your progress in this chapter will be lost.',
-          style: TextStyle(color: Colors.white70),
+          style: TextStyle(color: AppTheme.primaryText),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
             child: Text(
               'CANCEL',
-              style: TextStyle(color: AppTheme.neonBlue),
+              style: TextStyle(color: AppTheme.primaryAccent),
             ),
           ),
           ElevatedButton(
@@ -286,9 +308,9 @@ class _WordGameScreenState extends State<WordGameScreen> {
               Navigator.pop(context); // Zurück zum Hauptmenü
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.neonBlue,
+              backgroundColor: AppTheme.primaryAccent,
             ),
-            child: Text('EXIT'),
+            child: Text('EXIT', style: TextStyle(color: Colors.white)),
           ),
         ],
       ),

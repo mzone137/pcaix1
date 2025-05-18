@@ -1,4 +1,4 @@
-// lib/widgets/game_mode_toggle_widget.dart - Aktualisiert für Standard-Nummern-Eingabe
+// lib/widgets/game_mode_toggle_widget.dart - Angepasst für helleres Design
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -15,10 +15,10 @@ class GameModeToggleWidget extends StatelessWidget {
         return Container(
           padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           decoration: BoxDecoration(
-            color: Colors.black45,
+            color: Colors.white,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: AppTheme.neonBlue.withOpacity(0.3),
+              color: AppTheme.primaryAccent.withOpacity(0.3),
               width: 1,
             ),
           ),
@@ -28,7 +28,7 @@ class GameModeToggleWidget extends StatelessWidget {
               Text(
                 'Game Mode',
                 style: TextStyle(
-                  color: Colors.white,
+                  color: AppTheme.primaryText,
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                 ),
@@ -85,10 +85,10 @@ class GameModeToggleWidget extends StatelessWidget {
       child: Container(
         padding: EdgeInsets.symmetric(horizontal: 20, vertical: 12),
         decoration: BoxDecoration(
-          color: isSelected ? AppTheme.neonBlue.withOpacity(0.2) : Colors.transparent,
+          color: isSelected ? AppTheme.primaryAccent.withOpacity(0.1) : Colors.transparent,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isSelected ? AppTheme.neonBlue : Colors.white24,
+            color: isSelected ? AppTheme.primaryAccent : Colors.grey.withOpacity(0.3),
             width: 1,
           ),
         ),
@@ -96,14 +96,14 @@ class GameModeToggleWidget extends StatelessWidget {
           children: [
             Icon(
               icon,
-              color: isSelected ? AppTheme.neonBlue : Colors.white54,
+              color: isSelected ? AppTheme.primaryAccent : AppTheme.primaryText.withOpacity(0.5),
               size: 20,
             ),
             SizedBox(width: 8),
             Text(
               label,
               style: TextStyle(
-                color: isSelected ? Colors.white : Colors.white54,
+                color: isSelected ? AppTheme.primaryText : AppTheme.primaryText.withOpacity(0.5),
                 fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
               ),
             ),
