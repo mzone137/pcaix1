@@ -36,6 +36,23 @@ class _NumberInputWidgetState extends State<NumberInputWidget> {
   }
 
   @override
+  void didUpdateWidget(NumberInputWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    // Reset user sequence when switching to a new sentence/level
+    final currentSentence = Provider.of<WordGameStateModel>(context, listen: false).currentSentence;
+    final oldSentence = Provider.of<WordGameStateModel>(context, listen: false).currentSentence;
+
+    if (currentSentence != oldSentence) {
+      setState(() {
+        _userSequence = "";
+        _isSequenceCorrect = null;
+      });
+    }
+  }
+
+
+  @override
   Widget build(BuildContext context) {
     return Consumer<WordGameStateModel>(
       builder: (context, gameState, _) {

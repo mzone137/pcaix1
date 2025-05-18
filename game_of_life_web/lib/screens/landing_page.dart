@@ -1,13 +1,8 @@
 // Vereinfachte landing_page.dart
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import '../models/word_game_models.dart';
-import '../widgets/animated_background.dart';
 import '../widgets/app_footer.dart';
-import '../widgets/glitch_text.dart';
+import '../widgets/app_navigation_drawer.dart';
 import '../utils/app_theme.dart';
-import 'home_screen.dart';
-import 'word_game_levels_screen.dart';
 
 class LandingPage extends StatefulWidget {
   const LandingPage({Key? key}) : super(key: key);
@@ -47,27 +42,21 @@ class _LandingPageState extends State<LandingPage> with SingleTickerProviderStat
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      // AppBar hinzufügen mit Menü-Button
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        iconTheme: IconThemeData(color: AppTheme.primaryAccent),
+        // Die AppBar transparent und minimalistisch halten
+      ),
       body: Column(
         children: [
           Expanded(
             child: Stack(
               children: [
-                // Animated Matrix-style Background
-                const AnimatedBackground(),
-
-                // Overlay with Semi-transparent Gradient
+                // Heller Hintergrund
                 Container(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topCenter,
-                      end: Alignment.bottomCenter,
-                      colors: [
-                        Colors.black.withOpacity(0.7),
-                        AppTheme.deepBlue.withOpacity(0.8),
-                        Colors.black.withOpacity(0.7),
-                      ],
-                    ),
-                  ),
+                  color: AppTheme.creamBackground,
                 ),
 
                 // Content
@@ -83,15 +72,30 @@ class _LandingPageState extends State<LandingPage> with SingleTickerProviderStat
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 24.0),
                       child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
                           const SizedBox(height: 60),
 
-                          // Title with Glitch Effect
+                          // Title ohne Glitch-Effekt
                           Center(
-                            child: GlitchText(
-                              'NEURAL NEXUS',
-                              style: AppTheme.titleStyle,
+                            child: ShaderMask(
+                              blendMode: BlendMode.srcIn,
+                              shaderCallback: (Rect bounds) {
+                                return LinearGradient(
+                                  begin: Alignment.topCenter,
+                                  end: Alignment.bottomCenter,
+                                  colors: [
+                                    AppTheme.primaryAccent,
+                                    AppTheme.primaryAccent.withOpacity(0.7),
+                                    AppTheme.primaryAccent,
+                                  ],
+                                ).createShader(bounds);
+                              },
+                              child: Text(
+                                'NEURAL NEXUS',
+                                style: AppTheme.titleStyle,
+                                textAlign: TextAlign.center,
+                              ),
                             ),
                           ),
 
@@ -108,19 +112,51 @@ class _LandingPageState extends State<LandingPage> with SingleTickerProviderStat
 
                           const SizedBox(height: 80),
 
-                          // ONLY 2 Menu Items as requested
-                          _buildMenuItem(
-                            icon: Icons.grid_4x4,
-                            title: 'GAME OF LIFE',
-                            subtitle: 'Interactive cellular automaton',
-                            onTap: () => _navigateToGameOfLife(context),
-                          ),
-
-                          _buildMenuItem(
-                            icon: Icons.text_fields,
-                            title: 'WORLDS WIDE WORDS OLYMPIC GAMES',
-                            subtitle: 'Interactive word sequencing challenge',
-                            onTap: () => _navigateToWordGame(context),
+                          // Beschreibungstext statt Buttons
+                          Container(
+                            padding: EdgeInsets.all(24),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(12),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.05),
+                                  blurRadius: 10,
+                                  spreadRadius: 1,
+                                ),
+                              ],
+                            ),
+                            child: Column(
+                              children: [
+                                Text(
+                                  'Welcome to Neural Nexus',
+                                  style: TextStyle(
+                                    fontFamily: 'Orbitron',
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.bold,
+                                    color: AppTheme.primaryText,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                                SizedBox(height: 16),
+                                Text(
+                                  'Explore our interactive experiences through the menu. Swipe from the left edge or tap the menu icon to navigate.',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    color: AppTheme.primaryText.withOpacity(0.8),
+                                    height: 1.5,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                                SizedBox(height: 24),
+                                // Icon zur Verdeutlichung, dass es eine Seitenleiste gibt
+                                Icon(
+                                  Icons.menu,
+                                  color: AppTheme.primaryAccent,
+                                  size: 36,
+                                ),
+                              ],
+                            ),
                           ),
 
                           const Spacer(),
@@ -132,97 +168,13 @@ class _LandingPageState extends State<LandingPage> with SingleTickerProviderStat
               ],
             ),
           ),
-          // Footer now separated from the Stack
+          // Footer bleibt unverändert
           const AppFooter(),
         ],
       ),
+      // Hier die Navigation Drawer einbinden
+      drawer: AppNavigationDrawer(),
     );
   }
 
-  Widget _buildMenuItem({
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required VoidCallback onTap,
-  }) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 24.0),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(8.0),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0),
-          decoration: BoxDecoration(
-            color: Colors.black.withOpacity(0.5),
-            border: Border.all(
-              color: AppTheme.neonBlue.withOpacity(0.5),
-              width: 1.0,
-            ),
-            borderRadius: BorderRadius.circular(8.0),
-          ),
-          child: Row(
-            children: [
-              Icon(
-                icon,
-                color: AppTheme.neonBlue,
-                size: 28.0,
-              ),
-              const SizedBox(width: 16.0),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: AppTheme.menuItemTitleStyle,
-                    ),
-                    const SizedBox(height: 4.0),
-                    Text(
-                      subtitle,
-                      style: AppTheme.menuItemSubtitleStyle,
-                    ),
-                  ],
-                ),
-              ),
-              Icon(
-                Icons.arrow_forward_ios,
-                color: Colors.white.withOpacity(0.7),
-                size: 16.0,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  void _navigateToGameOfLife(BuildContext context) {
-    Navigator.push(
-      context,
-      PageRouteBuilder(
-        pageBuilder: (context, animation, secondaryAnimation) => const HomeScreen(),
-        transitionsBuilder: (context, animation, secondaryAnimation, child) {
-          var begin = const Offset(1.0, 0.0);
-          var end = Offset.zero;
-          var curve = Curves.easeInOut;
-          var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
-          return SlideTransition(
-            position: animation.drive(tween),
-            child: child,
-          );
-        },
-      ),
-    );
-  }
-
-// Vereinfachte _navigateToWordGame Methode
-  void _navigateToWordGame(BuildContext context) {
-    // Einfacher Übergang ohne komplexe Animation
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => const WordGameLevelsScreen(),
-      ),
-    );
-  }
 }

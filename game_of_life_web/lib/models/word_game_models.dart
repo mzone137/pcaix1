@@ -302,6 +302,7 @@ class WordGameStateModel extends ChangeNotifier {
   }
 
   /// Initialisiert das Spiel mit dem Level.
+// In lib/models/word_game_models.dart - zur initGame Methode hinzufügen:
   void initGame(WordGameLevel level) {
     _currentLevel = level;
     _currentChapter = level.chapters.isNotEmpty ? level.chapters.first : null;
@@ -309,6 +310,12 @@ class WordGameStateModel extends ChangeNotifier {
     _isGameActive = true;
     _stopwatch.reset();
     _stopwatch.start();
+
+    // Stelle sicher, dass die aktuelle Lösung zurückgesetzt wird
+    if (currentSentence != null) {
+      currentSentence!.resetSolution();
+    }
+
     notifyListeners();
   }
 
