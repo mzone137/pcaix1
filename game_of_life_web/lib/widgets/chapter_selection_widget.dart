@@ -1,7 +1,7 @@
 // lib/widgets/chapter_selection_widget.dart
 
 import 'package:flutter/material.dart';
-import '../models/word_game_models.dart';
+import '../domain/models/word_game_models.dart';
 import '../utils/app_theme.dart';
 
 class ChapterSelectionWidget extends StatelessWidget {

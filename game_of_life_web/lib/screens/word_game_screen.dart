@@ -1,15 +1,15 @@
 // lib/screens/word_game_screen.dart - Angepasst für helleres Design
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../models/word_game_models.dart';
+import '../domain/models/word_game_models.dart';
 import '../utils/app_theme.dart';
 import '../widgets/word_game_timer_widget.dart';
 import '../widgets/word_game_results_widget.dart';
 import '../widgets/chapter_selection_widget.dart';
-import '../widgets/drag_drop_word_game_widget.dart';
+import '../presentation/widgets/word_game/drag_drop_word_game_widget.dart';
 import '../widgets/number_input_widget.dart';
 import '../widgets/game_mode_toggle_widget.dart';
-import '../services/audio_service.dart';
+import '../services/audio/audio_service.dart';
 
 class WordGameScreen extends StatefulWidget {
   const WordGameScreen({Key? key}) : super(key: key);

@@ -2,7 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../models/word_game_models.dart';
+import '../domain/models/word_game_models.dart';
 import '../utils/app_theme.dart';
 
 class WordGameTimerWidget extends StatefulWidget {

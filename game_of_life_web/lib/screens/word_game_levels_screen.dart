@@ -3,7 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../data/word_game_data.dart';
-import '../models/word_game_models.dart';
+import '../domain/models/word_game_models.dart';
 import '../utils/app_theme.dart';
 import 'word_game_screen.dart';
 

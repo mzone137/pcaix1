@@ -2,7 +2,7 @@
 
 import 'package:flutter/material.dart';
 import '../utils/app_theme.dart';
-import '../services/audio_service.dart';
+import '../services/audio/audio_service.dart';
 
 class DroppableWordSlotWidget extends StatefulWidget {
   final int position;

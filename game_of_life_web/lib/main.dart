@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:game_of_life_app/utils/app_theme.dart';
 import 'package:provider/provider.dart';
 import 'models/game_state.dart';
-import 'models/word_game_models.dart';
+import 'domain/models/word_game_models.dart';
 import 'screens/landing_page.dart';
 import 'services/chiptune_service.dart';
 
