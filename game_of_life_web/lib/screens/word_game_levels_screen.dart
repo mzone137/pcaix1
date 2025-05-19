@@ -241,19 +241,17 @@ class _WordGameLevelsScreenState extends State<WordGameLevelsScreen> with Single
     );
   }
 
+// Überarbeitete _navigateToGame Methode
   void _navigateToGame(BuildContext context, WordGameLevel level, WordGameStateModel gameState) {
-    // 2-Sekunden Übergangsanimation
-    showGeneralDialog(
-      context: context,
-      barrierDismissible: false,
-      pageBuilder: (_, __, ___) => Container(),
-      transitionBuilder: (context, animation, secondaryAnimation, child) {
-        return FadeTransition(
-          opacity: Tween<double>(begin: 0.0, end: 1.0).animate(animation),
-          child: Container(color: Colors.black),
-        );
-      },
-      transitionDuration: Duration(milliseconds: 400),
+    // Initialisiere das Spiel vor der Navigation
+    gameState.resetGame(); // Vollständiger Reset
+    gameState.initGame(level);
+
+    // Vereinfache die Navigation drastisch
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => WordGameScreen(),
+      ),
     );
 
     // Initialisiere das Spiel und navigiere nach einer Verzögerung

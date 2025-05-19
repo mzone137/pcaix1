@@ -60,13 +60,13 @@ class WordGameSentence {
   /// Die randomisierten Wörter des Satzes mit ihren Original-Indizes.
   /// Key: Position im randomisierten Satz
   /// Value: MapEntry mit (Original-Index, Wort)
-  late final Map<int, MapEntry<int, String>> randomizedWordsWithIndices;
+  Map<int, MapEntry<int, String>> randomizedWordsWithIndices = {};
 
   /// Mapping von Originalindex zu randomisiertem Index
-  late final Map<int, int> _indexMapping;
+  Map<int, int> _indexMapping = {};
 
   /// Umgekehrtes Mapping: von randomisiertem Index zu Originalindex
-  late final Map<int, int> _reverseIndexMapping;
+  Map<int, int> _reverseIndexMapping = {};
 
   /// Verfolgt die aktuelle Position jedes Wortes im Drag & Drop-Interface.
   /// Key: Die originale Position des Wortes (0-basiert)
@@ -77,13 +77,15 @@ class WordGameSentence {
   final Set<int> _occupiedTargetPositions = {};
 
   /// Für den Nummern-Eingabemodus: Speichert die Vermutungen des Nutzers
-  late final List<int?> userGuesses;
+  List<int?> userGuesses = [];
 
   WordGameSentence({required this.words}) {
-    _randomizeWords();
-    _initializePositions();
     // Initialisiere die Nutzereingaben als leere Liste (null-Werte)
     userGuesses = List.filled(words.length, null);
+    // Initialisiere die Wortpositionen
+    _initializePositions();
+    // Randomisiere die Wörter für das erste Mal
+    _randomizeWords();
   }
 
   /// Erstellt einen Satz aus einem Text-String.
@@ -97,9 +99,10 @@ class WordGameSentence {
   void _randomizeWords() {
     final random = Random();
 
-    // Erstelle ein Mapping für die Randomisierung
-    _indexMapping = {};
-    _reverseIndexMapping = {};
+    // Leere die vorhandenen Mappings anstatt sie neu zu initialisieren
+    _indexMapping.clear();
+    _reverseIndexMapping.clear();
+    randomizedWordsWithIndices.clear();
 
     // Liste von originalen Indizes
     List<int> originalIndices = List.generate(words.length, (i) => i);
@@ -111,7 +114,6 @@ class WordGameSentence {
     List<int> displayNumbers = List.generate(words.length, (i) => i + 1);
 
     // Baue die randomisierten Wörter mit ihren Indizes auf
-    randomizedWordsWithIndices = {};
     for (int i = 0; i < words.length; i++) {
       int originalIndex = originalIndices[i];
       int displayNumber = displayNumbers[i];
@@ -267,14 +269,16 @@ class WordGameSentence {
 
   /// Setzt die Lösung zurück
   void resetSolution() {
+    // Zurücksetzen der Platzierungen
     _occupiedTargetPositions.clear();
     _initializePositions();
+
     // Setze auch die Nutzereingaben zurück
     for (int i = 0; i < userGuesses.length; i++) {
       userGuesses[i] = null;
     }
 
-    // Randomisiere die Wörter neu - optional, je nach gewünschtem Verhalten
+    // Randomisiere die Wörter neu
     _randomizeWords();
   }
 }
