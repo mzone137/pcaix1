@@ -1,27 +1,16 @@
-// lib/utils/constants.dart - Neue Datei mit zentralisierten Konstanten
-
+// utils/constants.dart - Ohne Game of Life Konstanten
 import 'package:flutter/material.dart';
 
-/// Diese Klasse enthält zentrale Konstanten für die gesamte Anwendung.
-/// Die Verwendung zentraler Konstanten anstelle von Magic Numbers und Magic Strings
-/// verbessert die Wartbarkeit und Konsistenz der Anwendung.
 class AppConstants {
   // Privater Konstruktor, um Instanziierung zu verhindern
   AppConstants._();
 
   // App-Informationen
-  static const String appTitle = 'Neural Nexus - Game of Life';
+  static const String appTitle = 'Neural Nexus';
   static const String appVersion = '1.0.0';
   static const String appCopyright = '© 2025 NEURAL NEXUS SYSTEMS';
 
-  // Game of Life Konstanten
-  static const int defaultGridRows = 40;
-  static const int defaultGridColumns = 30;
-  static const double defaultCellDensity = 0.3;
-  static const Duration defaultUpdateInterval = Duration(milliseconds: 200);
-  static const double minSpeedFactor = 0.25;
-  static const double maxSpeedFactor = 4.0;
-  static const double defaultCellSize = 10.0;
+  // Game of Life Konstanten entfernt
 
   // Word Game Konstanten
   static const Duration sentenceTransitionDelay = Duration(milliseconds: 500);
@@ -53,39 +42,21 @@ class AppConstants {
   // Asset-Pfade
   static const String backgroundImagePath = 'assets/images/grid_background.jpg';
 
-  // Predefined Game of Life Patterns
-  static const List<List<bool>> gliderPattern = [
-    [false, true, false],
-    [false, false, true],
-    [true, true, true],
-  ];
-
-  static const List<List<bool>> blinkerPattern = [
-    [true],
-    [true],
-    [true],
-  ];
-
-  static const List<List<bool>> blockPattern = [
-    [true, true],
-    [true, true],
-  ];
+  // Game of Life Patterns entfernt
 
   // Route Namen
   static const String routeLanding = '/';
-  static const String routeHome = '/home';
-  static const String routeDetail = '/detail';
   static const String routeWordGameLevels = '/word-game-levels';
   static const String routeWordGame = '/word-game';
   static const String routeImpressum = '/impressum';
 }
 
-/// Diese Klasse enthält zentrale UI-Komponenten, die in der gesamten Anwendung wiederverwendet werden können.
+/// UI-Komponenten Hilfsmethoden
 class AppWidgets {
-  // Privater Konstruktor, um Instanziierung zu verhindern
+  // Privater Konstruktor
   AppWidgets._();
 
-  /// Erstellt eine standardisierte Überschrift für Bildschirme.
+  /// Standardisierte Überschrift
   static Widget buildScreenHeader(String title) {
     return Padding(
       padding: const EdgeInsets.only(
@@ -107,6 +78,8 @@ class AppWidgets {
       ),
     );
   }
+
+// Weitere Widget-Builder bleiben unverändert...
 
   /// Erstellt einen standardisierten Container für Inhalte.
   static Widget buildContentContainer({

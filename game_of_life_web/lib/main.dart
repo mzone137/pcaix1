@@ -1,20 +1,19 @@
-// lib/main.dart - Fokussiert auf Game of Life
+// main.dart - Refaktorierte Version ohne Game of Life
 import 'package:flutter/material.dart';
 import 'package:game_of_life_app/utils/app_theme.dart';
 import 'package:provider/provider.dart';
-import 'models/game_state.dart';
 import 'domain/models/word_game_models.dart';
 import 'screens/landing_page.dart';
 import 'services/chiptune_service.dart';
 
 void main() {
-  // Stellen Sie sicher, dass Flutter-Widgets initialisiert sind
+  // Flutter-Widgets initialisieren
   WidgetsFlutterBinding.ensureInitialized();
 
   runApp(
     MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (context) => GameStateModel()),
+        // GameStateModel Provider entfernt
         ChangeNotifierProvider(create: (context) => WordGameStateModel()),
         ChangeNotifierProvider(create: (context) => ChiptuneService()),
       ],
@@ -27,10 +26,9 @@ class MyApp extends StatelessWidget {
   const MyApp({Key? key}) : super(key: key);
 
   @override
-  @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Neural Nexus - Game of Life',
+      title: 'Neural Nexus',
       theme: ThemeData(
         brightness: Brightness.light,
         primaryColor: AppTheme.primaryAccent,
@@ -50,5 +48,4 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
     );
   }
-
 }

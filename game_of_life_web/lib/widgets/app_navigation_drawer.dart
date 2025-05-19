@@ -1,7 +1,7 @@
-// lib/widgets/app_navigation_drawer.dart - vollständig korrigiert
+// app_navigation_drawer.dart - Ohne Game of Life Menüpunkt
 import 'package:flutter/material.dart';
 import '../utils/app_theme.dart';
-import '../screens/home_screen.dart';
+// HomeScreen Import entfernt
 import '../screens/word_game_levels_screen.dart';
 import '../screens/impressum_screen.dart';
 
@@ -13,7 +13,6 @@ class AppNavigationDrawer extends StatefulWidget {
 }
 
 class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
-  // Zustand der Expansion von Menüpunkten
   bool _isGamesExpanded = false;
   bool _isSettingsExpanded = false;
 
@@ -23,7 +22,7 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
       backgroundColor: Colors.white,
       child: Column(
         children: [
-          // Drawer Header - KORRIGIERT
+          // Drawer Header
           Container(
             padding: EdgeInsets.symmetric(vertical: 40, horizontal: 16),
             decoration: AppTheme.drawerHeaderDecoration,
@@ -31,18 +30,18 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
               children: [
                 Icon(
                   Icons.psychology,
-                  size: 36, // Reduzierte Größe
+                  size: 36,
                   color: AppTheme.primaryAccent,
                 ),
-                SizedBox(width: 12), // Reduzierter Abstand
-                Expanded(  // Flexible Anpassung
-                  child: FittedBox(  // Automatische Skalierung
+                SizedBox(width: 12),
+                Expanded(
+                  child: FittedBox(
                     fit: BoxFit.scaleDown,
                     alignment: Alignment.centerLeft,
                     child: Text(
                       'NEURAL NEXUS',
                       style: AppTheme.drawerHeaderTextStyle.copyWith(
-                        fontSize: 22, // Kleinere Schrift
+                        fontSize: 22,
                       ),
                     ),
                   ),
@@ -51,7 +50,7 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
             ),
           ),
 
-          // Liste der Navigationspunkte
+          // Navigation List
           Expanded(
             child: ListView(
               padding: EdgeInsets.zero,
@@ -61,58 +60,28 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
                   leading: Icon(Icons.home, color: AppTheme.primaryAccent),
                   title: Text('Home', style: AppTheme.drawerItemTextStyle),
                   onTap: () {
-                    Navigator.pop(context); // Schließe Drawer
-                    // Wenn bereits auf Home, mache nichts
+                    Navigator.pop(context);
                     if (ModalRoute.of(context)?.settings.name == '/') {
                       return;
                     }
-                    // Navigiere zur Startseite
                     Navigator.popUntil(context, (route) => route.isFirst);
                   },
                 ),
 
-                // Aufklappbarer Games-Menüpunkt
-                ExpansionTile(
-                  leading: Icon(Icons.games, color: AppTheme.primaryAccent),
-                  title: Text('Games', style: AppTheme.drawerItemTextStyle),
-                  initiallyExpanded: _isGamesExpanded,
-                  onExpansionChanged: (expanded) {
-                    setState(() {
-                      _isGamesExpanded = expanded;
-                    });
+                // Word Game - jetzt direkt statt unter Games
+                ListTile(
+                  leading: Icon(Icons.text_fields, color: AppTheme.primaryAccent),
+                  title: Text('Word Game', style: AppTheme.drawerItemTextStyle),
+                  onTap: () {
+                    Navigator.pop(context);
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const WordGameLevelsScreen()),
+                    );
                   },
-                  children: [
-                    // Game of Life Unterpunkt
-                    ListTile(
-                      contentPadding: EdgeInsets.only(left: 56, right: 16),
-                      leading: Icon(Icons.grid_4x4, color: AppTheme.primaryAccent),
-                      title: Text('Game of Life', style: AppTheme.drawerItemTextStyle.copyWith(fontSize: 14)),
-                      onTap: () {
-                        Navigator.pop(context); // Schließe Drawer
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => const HomeScreen()),
-                        );
-                      },
-                    ),
-
-                    // Word Game Unterpunkt
-                    ListTile(
-                      contentPadding: EdgeInsets.only(left: 56, right: 16),
-                      leading: Icon(Icons.text_fields, color: AppTheme.primaryAccent),
-                      title: Text('Word Game', style: AppTheme.drawerItemTextStyle.copyWith(fontSize: 14)),
-                      onTap: () {
-                        Navigator.pop(context); // Schließe Drawer
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => const WordGameLevelsScreen()),
-                        );
-                      },
-                    ),
-                  ],
                 ),
 
-                // Aufklappbarer Settings-Menüpunkt
+                // Settings
                 ExpansionTile(
                   leading: Icon(Icons.settings, color: AppTheme.primaryAccent),
                   title: Text('Settings', style: AppTheme.drawerItemTextStyle),
@@ -129,8 +98,7 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
                       leading: Icon(Icons.volume_up, color: AppTheme.primaryAccent),
                       title: Text('Sound Settings', style: AppTheme.drawerItemTextStyle.copyWith(fontSize: 14)),
                       onTap: () {
-                        Navigator.pop(context); // Schließe Drawer
-                        // Hier könnte eine Sound-Einstellungsseite angezeigt werden
+                        Navigator.pop(context);
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(content: Text('Sound Settings - Coming soon')),
                         );
@@ -143,8 +111,7 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
                       leading: Icon(Icons.display_settings, color: AppTheme.primaryAccent),
                       title: Text('Display Settings', style: AppTheme.drawerItemTextStyle.copyWith(fontSize: 14)),
                       onTap: () {
-                        Navigator.pop(context); // Schließe Drawer
-                        // Hier könnte eine Display-Einstellungsseite angezeigt werden
+                        Navigator.pop(context);
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(content: Text('Display Settings - Coming soon')),
                         );
@@ -153,12 +120,12 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
                   ],
                 ),
 
-                // Impressum - nicht aufklappbar
+                // Impressum
                 ListTile(
                   leading: Icon(Icons.info, color: AppTheme.primaryAccent),
                   title: Text('Impressum', style: AppTheme.drawerItemTextStyle),
                   onTap: () {
-                    Navigator.pop(context); // Schließe Drawer
+                    Navigator.pop(context);
                     Navigator.push(
                       context,
                       MaterialPageRoute(builder: (context) => const ImpressumScreen()),
@@ -169,7 +136,7 @@ class _AppNavigationDrawerState extends State<AppNavigationDrawer> {
             ),
           ),
 
-          // Footer im Drawer
+          // Drawer Footer
           Container(
             padding: EdgeInsets.symmetric(vertical: 16, horizontal: 16),
             decoration: BoxDecoration(
